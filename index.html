@@ -22,6 +22,7 @@
   --accent:#1F6FEB; --accent-ink:#FFF;
   --good:#1E8E4A; --warn:#C2410C;
   --chrome:rgba(22,30,27,.82); --chrome-ink:#FFF;
+  --navbg:#F3F5F4; --navsel:#FFFFFF;
   --sh:0 4px 14px rgba(10,24,20,.14), 0 18px 40px rgba(10,24,20,.14);
   --sh-s:0 2px 10px rgba(10,24,20,.16);
   box-sizing:border-box;
@@ -30,7 +31,7 @@
   /* nav sits just above the home indicator, not a full inset below it */
   --gap:0px;
   --nb:0px;
-  --navh:74px;
+  --navh:64px;
   --above:calc(var(--navh) + 12px);
 }
 :root[data-theme=dark]{
@@ -39,11 +40,12 @@
   --accent:#4D93FF; --accent-ink:#05111E;
   --good:#4ECB7B; --warn:#F08A5D;
   --chrome:rgba(16,23,21,.84); --chrome-ink:#FFF;
+  --navbg:#161F1C; --navsel:#26322E;
   --sh:0 4px 14px rgba(0,0,0,.45), 0 18px 44px rgba(0,0,0,.55);
   --sh-s:0 2px 10px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:inherit}
-html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--navbg)}
 body{
   background:transparent;color:var(--text);
   font-family:"Manrope","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -72,6 +74,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .dark-pill{background:var(--chrome);color:var(--chrome-ink);
   backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);
   box-shadow:var(--sh-s)}
+[hidden]{display:none!important}
 .fab{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
 .fab svg.i{width:26px;height:26px;stroke-width:2}
 .fab.on{background:var(--accent);color:var(--accent-ink)}
@@ -118,13 +121,12 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 
 /* ---------- bottom nav ---------- */
 #nav{position:fixed;z-index:640;left:0;right:0;bottom:0;
-  height:var(--navh);border-radius:24px 24px 0 0;background:var(--bg);
-  box-shadow:0 -6px 22px rgba(10,24,20,.16);
-  border-top:1px solid var(--line);display:flex;align-items:center;padding:0 6px}
-#nav button{flex:1 1 0;height:62px;border-radius:30px;display:flex;flex-direction:column;
+  height:var(--navh);background:var(--navbg);
+  border-top:1px solid var(--line);display:flex;align-items:flex-start;padding:4px 6px 0}
+#nav button{flex:1 1 0;height:54px;border-radius:30px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;color:var(--mute);min-width:0}
 #nav button b{font-size:11.5px;font-weight:600;letter-spacing:-.01em}
-#nav button[aria-current=true]{background:var(--surf);color:var(--good)}
+#nav button[aria-current=true]{background:var(--navsel);color:var(--good)}
 
 /* ---------- pages ---------- */
 #page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:0;
@@ -334,6 +336,9 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ setT6:"地块备份", bkNote:"地块只存在这台手机的浏览器里。iOS 会在空间不足、清纪录、或删掉主画面图标时把它清掉，所以请自己留一份。把下面整段文字复制去备忘录或 WhatsApp 给自己，就是完整备份。",
+ bkCopy:"复制备份", bkCopied:"已复制", bkFile:"下载成档案", bkPasteL:"贴上备份文字，按还原",
+ bkRestore:"还原", bkBad:"这段文字不是有效的备份", bkAdded:"已加入 ", bkSkip:" 块（重复的略过）",
  setT5:"地名搜索（可选）", setGkey:"Google Places API Key",
  setGkeyNote:"留空就用 OpenStreetMap（免费、不用注册，但偏远小地方常常查不到）。填了 Google 的 key 就改用 Google Places 的地点库，小地方、店名、园丘名都搜得到。<br><br>代价：要开 Google Cloud 帐号并绑信用卡，就算用不到钱也必须开通计费。Places API 的 Text Search 每月有 5,000 次免费额度，你一个月搜几十次根本用不完。<br><br>这个 key 会写在网页里，任何人打开原始码都看得到。所以一定要在 Google Cloud Console 里：① 用「HTTP referrer」限制成只有你的 GitHub Pages 网址能用；② 只勾 Places API；③ 把配额上限设在免费额度以下。做完这三步，key 被别人捡去也刷不出帐单。",
  srchAttrG:"地名搜索：Google Places API。由你按下搜索才发出一次请求。",
@@ -413,6 +418,9 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ setT6:"Field backup", bkNote:"Fields live only in this phone's browser. iOS clears that when storage runs low, when you clear history, or when you delete the home-screen icon. Keep your own copy: copy the text below into Notes or message it to yourself.",
+ bkCopy:"Copy backup", bkCopied:"Copied", bkFile:"Download as file", bkPasteL:"Paste a backup here, then Restore",
+ bkRestore:"Restore", bkBad:"That text is not a valid backup", bkAdded:"Added ", bkSkip:" field(s); duplicates skipped",
  setT5:"Place search (optional)", setGkey:"Google Places API key",
  setGkeyNote:"Leave blank to use OpenStreetMap — free, no signup, but it often misses small remote places. Paste a Google key and searches go to Google Places instead, which knows small kampungs, shop names and estate names.<br><br>The cost: you need a Google Cloud account with a card on file, and billing must be enabled even if you never spend. Places Text Search includes 5,000 free calls a month — a few dozen searches will not come close.<br><br>The key sits in the page source where anyone can read it. So in Google Cloud Console you must: (1) restrict it by HTTP referrer to your GitHub Pages URL only; (2) enable Places API only; (3) set a quota cap below the free allowance. With those three done, a stolen key cannot run up a bill.",
  srchAttrG:"Place search: Google Places API. One request, sent only when you press search.",
@@ -492,6 +500,9 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ setT6:"Sandaran lot", bkNote:"Lot disimpan dalam pelayar telefon ini sahaja. iOS akan memadamnya bila ruang simpanan rendah, bila anda kosongkan sejarah, atau bila ikon skrin utama dipadam. Simpan salinan sendiri.",
+ bkCopy:"Salin sandaran", bkCopied:"Disalin", bkFile:"Muat turun fail", bkPasteL:"Tampal sandaran di sini, kemudian Pulihkan",
+ bkRestore:"Pulihkan", bkBad:"Teks itu bukan sandaran yang sah", bkAdded:"Ditambah ", bkSkip:" lot; pendua dilangkau",
  setT5:"Carian tempat (pilihan)", setGkey:"Kunci API Google Places",
  setGkeyNote:"Biar kosong untuk guna OpenStreetMap — percuma, tiada pendaftaran, tetapi selalu tidak jumpa tempat kecil di pedalaman. Isi kunci Google untuk guna pangkalan tempat Google, yang tahu kampung kecil, nama kedai dan nama ladang.<br><br>Kosnya: perlu akaun Google Cloud dengan kad kredit, dan bil mesti diaktifkan walaupun anda tidak berbelanja. Places Text Search ada 5,000 panggilan percuma sebulan.<br><br>Kunci ini kelihatan dalam kod sumber laman. Jadi dalam Google Cloud Console: (1) hadkan ikut HTTP referrer kepada URL GitHub Pages anda sahaja; (2) aktifkan Places API sahaja; (3) tetapkan had kuota di bawah jumlah percuma.",
  srchAttrG:"Carian tempat: Google Places API. Satu permintaan, hanya bila anda tekan cari.",
@@ -584,7 +595,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-g";
+const BUILD = "2026-09-26-i";
 /* iOS under-reports env(safe-area-inset-bottom) in standalone mode: on the
    test device it said 31px when the webview was actually 51px short of the
    screen. So measure the shortfall directly and let CSS use that. Where the
@@ -620,6 +631,26 @@ function layoutDiag(){
           ["#map height",mr.height.toFixed(1)+" px"]];
 }
 const saveFields = ()=>localStorage.setItem("os.fields",JSON.stringify(fields));
+
+/* Accept only what we can actually draw: an id, a name, and a ring of
+   >=3 finite [lon,lat] pairs. Anything else is rejected whole. */
+function parseBackup(txt){
+  let j; try{ j=JSON.parse(String(txt).trim()); }catch(_){ return null; }
+  const arr = Array.isArray(j) ? j : (j && Array.isArray(j.fields) ? j.fields : null);
+  if(!arr || !arr.length) return null;
+  const ok=[];
+  for(const f of arr){
+    if(!f || typeof f.id!=="string" || typeof f.name!=="string") return null;
+    if(!Array.isArray(f.ring) || f.ring.length<3) return null;
+    for(const pt of f.ring){
+      if(!Array.isArray(pt) || pt.length<2) return null;
+      const lon=+pt[0], lat=+pt[1];
+      if(!isFinite(lon)||!isFinite(lat)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
+    }
+    ok.push({id:f.id, name:f.name, ring:f.ring.map(p=>[+p[0],+p[1]])});
+  }
+  return ok;
+}
 const activeField = ()=>fields.find(f=>f.id===activeId)||null;
 
 /* ===================== map ===================== */
@@ -1345,6 +1376,15 @@ function pgSet(){
     <label class="f">Client Secret</label><input type="password" id="cSec" value="${esc(cfg.clientSecret)}" autocomplete="off">
     <label class="f">${t().setProxy}</label><input type="text" id="cPrx" value="${esc(cfg.proxy)}" placeholder="https://your-worker.workers.dev/token">
     <div class="msg err">${t().setSecWarn}</div></div>
+  <div class="card"><h3>${t().setT6}</h3>
+    <p class="sub">${t().bkNote}</p>
+    <textarea id="bkOut" readonly style="margin-top:10px">${esc(JSON.stringify({v:1,fields}))}</textarea>
+    <button class="btn wide alt" id="bkCopy" style="margin-top:10px">${t().bkCopy}</button>
+    <button class="btn wide alt" id="bkFile" style="margin-top:8px">${t().bkFile}</button>
+    <label class="f" style="margin-top:16px">${t().bkPasteL}</label>
+    <textarea id="bkIn" placeholder='{"v":1,"fields":[…]}'></textarea>
+    <button class="btn wide alt" id="bkRestore" style="margin-top:10px">${t().bkRestore}</button>
+    <div id="bkOut2" style="margin-top:10px"></div></div>
   <div class="card"><h3>${t().setT5}</h3>
     <label class="f">${t().setGkey}</label><input type="password" id="cGk" value="${esc(cfg.gkey)}" autocomplete="off" placeholder="AIza…">
     <p class="sub" style="margin-top:10px">${t().setGkeyNote}</p></div>
@@ -1392,6 +1432,30 @@ function bindPage(){
     setStatus("ok",t().cfgSaved);
     $("testOut").innerHTML=`<div class="msg info">${t().cfgSaved}</div>`;
   };
+  if($("bkCopy")) $("bkCopy").onclick=async()=>{
+    try{ await navigator.clipboard.writeText($("bkOut").value); }
+    catch(_){ $("bkOut").select(); document.execCommand("copy"); }
+    setStatus("ok", t().bkCopied);
+    $("bkOut2").innerHTML=`<div class="msg info">${t().bkCopied}</div>`;
+  };
+  if($("bkFile")) $("bkFile").onclick=()=>{
+    const blob=new Blob([$("bkOut").value],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="onesoil-fields-"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+  };
+  if($("bkRestore")) $("bkRestore").onclick=()=>{
+    const r=parseBackup($("bkIn").value);
+    if(!r){ $("bkOut2").innerHTML=`<div class="msg err">${t().bkBad}</div>`; return; }
+    const have=new Set(fields.map(f=>f.id));
+    let n=0;
+    for(const f of r){ if(!have.has(f.id)){ fields.push(f); have.add(f.id); n++; } }
+    if(n){ saveFields(); drawFields(); renderTop(); }
+    $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}</div>`;
+    $("bkIn").value="";
+  };
   if($("copyProd")) $("copyProd").onclick=async()=>{
     const b=$("copyProd");
     try{await navigator.clipboard.writeText(PROD_SCRIPT);b.textContent=t().copied;}
@@ -1423,6 +1487,7 @@ function bindPage(){
 
 /* ===================== boot ===================== */
 document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 measureGap();
 applyTheme(); applyLayer(); drawFields(); renderAll();
 
