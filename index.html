@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OneSoil">
+<link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap">
@@ -25,7 +26,7 @@
   --st:env(safe-area-inset-top,0px);
   --sb:env(safe-area-inset-bottom,0px);
   /* nav sits just above the home indicator, not a full inset below it */
-  --nb:8px;
+  --nb:max(10px, calc(var(--sb) - 10px));
   --navh:74px;
   --above:calc(var(--nb) + var(--navh) + 10px);
 }
@@ -55,6 +56,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 
 /* ---------- map ---------- */
 #map{position:fixed;top:0;left:0;right:0;bottom:0;
+  bottom:calc(0px - env(safe-area-inset-bottom,0px));
   background:var(--surf)}
 .leaflet-container{background:var(--surf);font-family:inherit}
 .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#fff!important;
@@ -122,6 +124,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 
 /* ---------- pages ---------- */
 #page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:0;
+  bottom:calc(0px - env(safe-area-inset-bottom,0px));
   background:var(--bg);overflow-y:auto;
   -webkit-overflow-scrolling:touch;padding:calc(16px + var(--st)) 16px calc(var(--above) + 24px)}
 #page[hidden]{display:none}
@@ -129,7 +132,8 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .h1sub{color:var(--mute);font-size:13.5px;margin:0 0 18px}
 
 /* ---------- sheets ---------- */
-#scrim{position:fixed;top:0;left:0;right:0;bottom:0;z-index:700;background:rgba(6,14,12,.45);
+#scrim{position:fixed;top:0;left:0;right:0;bottom:0;
+  bottom:calc(0px - env(safe-area-inset-bottom,0px));z-index:700;background:rgba(6,14,12,.45);
   opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #sheet{position:fixed;z-index:710;left:0;right:0;bottom:0;background:var(--bg);
@@ -269,6 +273,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 <div id="rightcol">
   <button id="btnDraw" class="fab dark-pill"><svg class="i" viewBox="0 0 24 24"><path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/></svg></button>
   <button id="btnUndo" class="fab dark-pill" hidden><svg class="i" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12H8"/></svg></button>
+  <button id="btnCancel" class="fab dark-pill" hidden><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <button id="btnLoc" class="fab dark-pill"><svg class="i" viewBox="0 0 24 24"><path d="M21 3L3 10.5l7.5 3 3 7.5z"/></svg></button>
   <button id="btnRadar" class="fab dark-pill" hidden><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5s6 6.4 6 10.2a6 6 0 1 1-12 0C6 9.9 12 3.5 12 3.5z"/></svg></button>
   <button id="btnInfo" class="fab dark-pill"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
@@ -322,6 +327,11 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ setT5:"地名搜索（可选）", setGkey:"Google Places API Key",
+ setGkeyNote:"留空就用 OpenStreetMap（免费、不用注册，但偏远小地方常常查不到）。填了 Google 的 key 就改用 Google Places 的地点库，小地方、店名、园丘名都搜得到。<br><br>代价：要开 Google Cloud 帐号并绑信用卡，就算用不到钱也必须开通计费。Places API 的 Text Search 每月有 5,000 次免费额度，你一个月搜几十次根本用不完。<br><br>这个 key 会写在网页里，任何人打开原始码都看得到。所以一定要在 Google Cloud Console 里：① 用「HTTP referrer」限制成只有你的 GitHub Pages 网址能用；② 只勾 Places API；③ 把配额上限设在免费额度以下。做完这三步，key 被别人捡去也刷不出帐单。",
+ srchAttrG:"地名搜索：Google Places API。由你按下搜索才发出一次请求。",
+ diagT:"版面诊断", diagNote:"排底部空白用的。截这张图给我就够判断了。",
+ drawCancel:"不画了", drawGone:"已取消，没有存",
  srch:"搜地方", srchPh:"输入地名、城镇或坐标", srchGo:"搜索中…",
  srchNone:"找不到这个地方。换个写法，或直接输入「纬度, 经度」。",
  srchFail:"搜索失败：", srchAttr:"地名搜索：Nominatim / © OpenStreetMap 贡献者。由你按下搜索才发出请求，不做边打边搜。",
@@ -396,6 +406,11 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ setT5:"Place search (optional)", setGkey:"Google Places API key",
+ setGkeyNote:"Leave blank to use OpenStreetMap — free, no signup, but it often misses small remote places. Paste a Google key and searches go to Google Places instead, which knows small kampungs, shop names and estate names.<br><br>The cost: you need a Google Cloud account with a card on file, and billing must be enabled even if you never spend. Places Text Search includes 5,000 free calls a month — a few dozen searches will not come close.<br><br>The key sits in the page source where anyone can read it. So in Google Cloud Console you must: (1) restrict it by HTTP referrer to your GitHub Pages URL only; (2) enable Places API only; (3) set a quota cap below the free allowance. With those three done, a stolen key cannot run up a bill.",
+ srchAttrG:"Place search: Google Places API. One request, sent only when you press search.",
+ diagT:"Layout diagnostics", diagNote:"For chasing the bottom gap. A screenshot of this is enough to diagnose it.",
+ drawCancel:"Cancel drawing", drawGone:"Cancelled, nothing saved",
  srch:"Find a place", srchPh:"Town, place name, or coordinates", srchGo:"Searching…",
  srchNone:"No match. Try another spelling, or type \"lat, lon\" directly.",
  srchFail:"Search failed: ", srchAttr:"Place search: Nominatim / © OpenStreetMap contributors. Sent only when you press search — no type-ahead.",
@@ -470,6 +485,11 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ setT5:"Carian tempat (pilihan)", setGkey:"Kunci API Google Places",
+ setGkeyNote:"Biar kosong untuk guna OpenStreetMap — percuma, tiada pendaftaran, tetapi selalu tidak jumpa tempat kecil di pedalaman. Isi kunci Google untuk guna pangkalan tempat Google, yang tahu kampung kecil, nama kedai dan nama ladang.<br><br>Kosnya: perlu akaun Google Cloud dengan kad kredit, dan bil mesti diaktifkan walaupun anda tidak berbelanja. Places Text Search ada 5,000 panggilan percuma sebulan.<br><br>Kunci ini kelihatan dalam kod sumber laman. Jadi dalam Google Cloud Console: (1) hadkan ikut HTTP referrer kepada URL GitHub Pages anda sahaja; (2) aktifkan Places API sahaja; (3) tetapkan had kuota di bawah jumlah percuma.",
+ srchAttrG:"Carian tempat: Google Places API. Satu permintaan, hanya bila anda tekan cari.",
+ diagT:"Diagnostik susun atur", diagNote:"Untuk mengesan jurang bawah. Tangkap layar ini sudah memadai.",
+ drawCancel:"Batal lukisan", drawGone:"Dibatalkan, tiada disimpan",
  srch:"Cari tempat", srchPh:"Nama tempat, pekan, atau koordinat", srchGo:"Mencari…",
  srchNone:"Tiada padanan. Cuba ejaan lain, atau taip \"lat, lon\" terus.",
  srchFail:"Carian gagal: ", srchAttr:"Carian tempat: Nominatim / © penyumbang OpenStreetMap. Dihantar hanya bila anda tekan cari — bukan taip-terus-cari.",
@@ -548,7 +568,7 @@ const t = () => T[lang];
 
 /* ===================== state ===================== */
 const cfg = Object.assign({
-  instanceId:"",clientId:"",clientSecret:"",proxy:"",
+  instanceId:"",clientId:"",clientSecret:"",proxy:"",gkey:"",
   layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:30
 }, JSON.parse(localStorage.getItem("os.cfg")||"{}"));
 let fields = JSON.parse(localStorage.getItem("os.fields")||"[]");
@@ -557,6 +577,24 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
+const BUILD = "2026-09-26-e";
+function layoutDiag(){
+  const probe=document.createElement("div");
+  probe.style.cssText="position:fixed;bottom:env(safe-area-inset-bottom,0px);visibility:hidden";
+  document.body.appendChild(probe);
+  const sbPx=parseFloat(getComputedStyle(probe).bottom)||0;
+  probe.remove();
+  const standalone = (navigator.standalone===true) || matchMedia("(display-mode: standalone)").matches;
+  const mr=$("map").getBoundingClientRect();
+  return [["build",BUILD],
+          ["standalone",String(standalone)],
+          ["innerHeight",innerHeight+" px"],
+          ["screen.height",screen.height+" px"],
+          ["dpr",String(devicePixelRatio)],
+          ["safe-area-bottom",sbPx.toFixed(1)+" px"],
+          ["#map bottom",mr.bottom.toFixed(1)+" px"],
+          ["#map height",mr.height.toFixed(1)+" px"]];
+}
 const saveFields = ()=>localStorage.setItem("os.fields",JSON.stringify(fields));
 const activeField = ()=>fields.find(f=>f.id===activeId)||null;
 
@@ -847,7 +885,7 @@ function renderAll(){
   mapChromeVisible();
   $("page").hidden = onMap;
   if(!onMap) renderPage();
-  $("btnUndo").hidden = !drawing || view!=="map";
+  if(drawing && view!=="map") drawEnd(false); else drawSetChrome();
   applyRadar();
   if(view==="wx"){ renderWx(); ensureWeather(); }
   else if(wxMarker){ map.removeLayer(wxMarker); wxMarker=null; }
@@ -921,31 +959,56 @@ $("btnInfo").onclick=()=>{
     <div class="card"><h3>${t().srcT3}</h3>
       <p class="sub">Sentinel data use follows the <a href="https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice" target="_blank" rel="noopener">Sentinel Data Legal Notice</a>.<br><br>
       Kovács, D. D., Musial, J., Bojanowski, J., Clarijs, D., de la Mar, J., &amp; Zlinszky, A. (2026). Copernicus Data Space Ecosystem establishes public cloud processing for earth observation data. <em>Scientific Data</em>. doi:10.1038/s41597-026-06765-8</p></div>
+    <div class="card"><h3>${t().diagT}</h3>
+      <table>${layoutDiag().map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>
+      <p class="sub" style="margin-top:8px">${t().diagNote}</p></div>
     <button class="btn wide alt" id="closeSrc" style="margin-top:6px">OK</button>`);
   bindSheet();
 };
 
 /* ===================== drawing ===================== */
-$("btnDraw").onclick=()=>{
-  const b=$("btnDraw");
-  if(!drawing){
-    drawing=true; draftPts=[]; refreshDraft();
-    b.classList.add("on"); b.innerHTML=ic("plus",26).replace('d="M12 5v14M5 12h14"','d="M5 13l4.5 4.5L19 7"');
-    $("btnUndo").hidden=false; setStatus("busy",t().drawStart);
-  }else{
-    if(draftPts.length<3){ setStatus("bad",t().drawMin); return; }
-    const name=prompt(t().newFieldQ,`${t().field} ${fields.length+1}`);
+const DRAW_ICON = `<svg class="i" viewBox="0 0 24 24"><path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/></svg>`;
+const DONE_ICON = `<svg class="i" viewBox="0 0 24 24"><path d="M5 13l4.5 4.5L19 7"/></svg>`;
+
+function drawSetChrome(){
+  const b = $("btnDraw");
+  b.classList.toggle("on", drawing);
+  b.innerHTML = drawing ? DONE_ICON : DRAW_ICON;
+  b.title = drawing ? t().drawStart : t().addField;
+  $("btnUndo").hidden   = !drawing || view !== "map";
+  $("btnCancel").hidden = !drawing || view !== "map";
+  $("btnCancel").title  = t().drawCancel;
+}
+
+function drawBegin(){
+  drawing = true; draftPts = []; refreshDraft();
+  drawSetChrome(); setStatus("busy", t().drawStart);
+}
+
+/* leave draw mode. save=false throws the points away. */
+function drawEnd(save){
+  if(save){
+    if(draftPts.length < 3){ setStatus("bad", t().drawMin); return; }
+    const name = prompt(t().newFieldQ, `${t().field} ${fields.length+1}`);
     if(name){
-      const ring=draftPts.map(p=>[+p[1].toFixed(6),+p[0].toFixed(6)]); ring.push(ring[0]);
-      const f={id:Date.now().toString(36),name,ring};
-      fields.push(f); activeId=f.id; saveFields(); setStatus("ok",t().saved);
+      const ring = draftPts.map(p=>[+p[1].toFixed(6), +p[0].toFixed(6)]); ring.push(ring[0]);
+      const f = {id:Date.now().toString(36), name, ring};
+      fields.push(f); activeId = f.id; saveFields(); setStatus("ok", t().saved);
     }
-    drawing=false; draftPts=[]; refreshDraft();
-    b.classList.remove("on"); b.innerHTML=`<svg class="i" viewBox="0 0 24 24"><path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/></svg>`;
-    $("btnUndo").hidden=true; drawFields(); renderTop();
+  } else {
+    setStatus("ok", t().drawGone);
   }
+  drawing = false; draftPts = []; refreshDraft();
+  drawSetChrome(); drawFields(); renderTop();
+}
+
+$("btnDraw").onclick   = ()=> drawing ? drawEnd(true) : drawBegin();
+$("btnCancel").onclick = ()=> drawEnd(false);
+$("btnUndo").onclick   = ()=>{
+  if(!draftPts.length){ drawEnd(false); return; }   // undo past the first point = give up
+  draftPts.pop(); refreshDraft();
 };
-$("btnUndo").onclick=()=>{draftPts.pop();refreshDraft();};
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && drawing) drawEnd(false); });
 /* ===================== place search (Nominatim) ===================== */
 /* Policy: https://operations.osmfoundation.org/policies/nominatim/
    - no client-side auto-complete -> we fire ONLY on explicit submit
@@ -978,35 +1041,73 @@ async function srRun(){
   if(c){ srGo(c[0], c[1], null); return; }
 
   if(srBusy) return;
-  const wait = 1100 - (Date.now() - srLast);          // >= 1 req/sec
-  if(wait > 0) await new Promise(r=>setTimeout(r, wait));
-
-  srBusy = true; srLast = Date.now(); srMsg(t().srchGo);
+  srBusy = true; srMsg(t().srchGo);
   try{
-    const al = {zh:"zh",en:"en",ms:"ms"}[lang] || "en";
-    const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6"
-            + "&accept-language=" + al + "&q=" + encodeURIComponent(q);
-    const r = await fetch(u, {headers:{Accept:"application/json"}});
-    if(!r.ok) throw new Error("HTTP " + r.status);
-    const rows = await r.json();
-    if(!Array.isArray(rows) || !rows.length){ srMsg(t().srchNone); return; }
-    $("srList").innerHTML = rows.map((x,i)=>{
-      const parts = String(x.display_name||"").split(",");
-      const head = parts.shift().trim();
-      return `<button class="row" data-i="${i}">`
-           + `<svg class="i" viewBox="0 0 24 24" style="width:20px;opacity:.65;margin-top:2px;flex:0 0 auto">`
-           + `<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>`
-           + `<span><b>${esc(head)}</b><small>${esc(parts.join(",").trim())}</small></span></button>`;
-    }).join("") + `<div class="attr">${t().srchAttr}</div>`;
+    const rows = cfg.gkey ? await srGoogle(q) : await srOsm(q);
+    if(!rows.length){ srMsg(t().srchNone); return; }
+    $("srList").innerHTML = rows.map((x,i)=>
+        `<button class="row" data-i="${i}">`
+      + `<svg class="i" viewBox="0 0 24 24" style="width:20px;opacity:.65;margin-top:2px;flex:0 0 auto">`
+      + `<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>`
+      + `<span><b>${esc(x.head)}</b><small>${esc(x.sub)}</small></span></button>`
+    ).join("") + `<div class="attr">${cfg.gkey ? t().srchAttrG : t().srchAttr}</div>`;
     $("srList").querySelectorAll(".row").forEach(b=>{
-      b.onclick = ()=>{
-        const x = rows[+b.dataset.i];
-        srGo(+x.lat, +x.lon, x.boundingbox);
-      };
+      b.onclick = ()=>{ const x = rows[+b.dataset.i]; srGo(x.lat, x.lon, x.bb); };
     });
   }catch(e){
     srMsg(t().srchFail + (e.message||e));
   }finally{ srBusy = false; }
+}
+
+/* --- OpenStreetMap / Nominatim. No key. Submit-only, >=1s apart. --- */
+async function srOsm(q){
+  const wait = 1100 - (Date.now() - srLast);
+  if(wait > 0) await new Promise(r=>setTimeout(r, wait));
+  srLast = Date.now();
+  const al = {zh:"zh",en:"en",ms:"ms"}[lang] || "en";
+  const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6"
+          + "&accept-language=" + al + "&q=" + encodeURIComponent(q);
+  const r = await fetch(u, {headers:{Accept:"application/json"}});
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json();
+  if(!Array.isArray(j)) return [];
+  return j.map(x=>{
+    const parts = String(x.display_name||"").split(",");
+    return {head:parts.shift().trim(), sub:parts.join(",").trim(),
+            lat:+x.lat, lon:+x.lon, bb:x.boundingbox};
+  });
+}
+
+/* --- Google Places Text Search (New). Needs a key in Settings.
+       fieldMask is kept to the three fields we actually use, so the
+       request bills at one Text Search call and nothing more.        --- */
+async function srGoogle(q){
+  const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "X-Goog-Api-Key": cfg.gkey,
+      "X-Goog-FieldMask":"places.displayName,places.formattedAddress,places.location"
+    },
+    body: JSON.stringify({
+      textQuery: q,
+      languageCode: {zh:"zh-CN",en:"en",ms:"ms"}[lang] || "en",
+      regionCode: "MY",
+      maxResultCount: 6
+    })
+  });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok){
+    const m = j && j.error && j.error.message ? j.error.message : ("HTTP " + r.status);
+    throw new Error(m);
+  }
+  return (j.places||[]).map(x=>({
+    head: (x.displayName && x.displayName.text) || "",
+    sub:  x.formattedAddress || "",
+    lat:  x.location && x.location.latitude,
+    lon:  x.location && x.location.longitude,
+    bb:   null
+  })).filter(x=>isFinite(x.lat) && isFinite(x.lon));
 }
 
 function srGo(la, lo, bb){
@@ -1219,6 +1320,9 @@ function pgSet(){
     <label class="f">Client Secret</label><input type="password" id="cSec" value="${esc(cfg.clientSecret)}" autocomplete="off">
     <label class="f">${t().setProxy}</label><input type="text" id="cPrx" value="${esc(cfg.proxy)}" placeholder="https://your-worker.workers.dev/token">
     <div class="msg err">${t().setSecWarn}</div></div>
+  <div class="card"><h3>${t().setT5}</h3>
+    <label class="f">${t().setGkey}</label><input type="password" id="cGk" value="${esc(cfg.gkey)}" autocomplete="off" placeholder="AIza…">
+    <p class="sub" style="margin-top:10px">${t().setGkeyNote}</p></div>
   <div class="card"><h3>${t().setT4}</h3>
     <p class="sub">${t().setProdNote}</p>
     <textarea id="prodScript" readonly>${esc(PROD_SCRIPT)}</textarea>
@@ -1258,6 +1362,7 @@ function bindPage(){
     cfg.layerMoist=$("cLm").value.trim(); cfg.layerProd=$("cLp").value.trim();
     cfg.layerTrue=$("cLt").value.trim(); cfg.clientId=$("cCid").value.trim();
     cfg.clientSecret=$("cSec").value.trim(); cfg.proxy=$("cPrx").value.trim();
+    cfg.gkey=$("cGk").value.trim();
     token=null;tokenExp=0; saveCfg(); applyLayer();
     setStatus("ok",t().cfgSaved);
     $("testOut").innerHTML=`<div class="msg info">${t().cfgSaved}</div>`;
@@ -1295,16 +1400,6 @@ function bindPage(){
 document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];
 applyTheme(); applyLayer(); drawFields(); renderAll();
 
-(function(){
-  const mf={name:APP_NAME,short_name:APP_NAME,start_url:".",scope:".",display:"standalone",
-    orientation:"portrait",background_color:"#0D1412",theme_color:"#0D1412",
-    icons:[{src:"data:image/svg+xml,"+encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" rx="110" fill="#0D1412"/><path d="M96 340c0-120 80-200 240-212 0 148-80 212-176 212H96z" fill="#4ECB7B"/><path d="M120 328c44-70 104-112 164-128" stroke="#0D1412" stroke-width="18" fill="none" stroke-linecap="round"/></svg>'),
-      sizes:"512x512",type:"image/svg+xml",purpose:"any"}]};
-  const l=document.createElement("link"); l.rel="manifest";
-  l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:"application/manifest+json"}));
-  document.head.appendChild(l);
-})();
 
 if("serviceWorker" in navigator)
   addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
