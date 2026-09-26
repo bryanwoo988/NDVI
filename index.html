@@ -25,9 +25,9 @@
   --st:env(safe-area-inset-top,0px);
   --sb:env(safe-area-inset-bottom,0px);
   /* nav sits just above the home indicator, not a full inset below it */
-  --nb:max(10px, calc(var(--sb) - 20px));
+  --nb:8px;
   --navh:74px;
-  --above:calc(var(--nb) + var(--navh) + 12px);
+  --above:calc(var(--nb) + var(--navh) + 10px);
 }
 :root[data-theme=dark]{
   --bg:#0D1412; --surf:#161F1C; --surf2:#1E2925; --line:#26322E;
@@ -39,9 +39,9 @@
   --sh-s:0 2px 10px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:inherit}
-html,body{height:100%;margin:0;overscroll-behavior:none}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:#0D1412}
 body{
-  background:var(--bg);color:var(--text);
+  background:transparent;color:var(--text);
   font-family:"Manrope","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;
   overflow:hidden;-webkit-tap-highlight-color:transparent;
@@ -54,7 +54,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
   stroke-linecap:round;stroke-linejoin:round;display:block;flex:0 0 auto}
 
 /* ---------- map ---------- */
-#map{position:fixed;top:0;left:0;right:0;bottom:calc(0px - var(--sb));
+#map{position:fixed;top:0;left:0;right:0;bottom:0;
   background:var(--surf)}
 .leaflet-container{background:var(--surf);font-family:inherit}
 .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#fff!important;
@@ -72,7 +72,26 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .fab.on{background:var(--accent);color:var(--accent-ink)}
 
 #topbar{position:fixed;z-index:620;left:14px;right:14px;top:calc(14px + var(--st));
-  display:flex;gap:10px;align-items:flex-start}
+  display:flex;gap:8px;align-items:flex-start}
+#topbar .fab{width:54px;height:54px}
+#topbar .fab svg.i{width:24px;height:24px}
+/* ---------- place search ---------- */
+#searchWrap{position:fixed;z-index:660;left:14px;right:14px;top:calc(14px + var(--st));display:none}
+#searchWrap.on{display:block}
+#srBar{display:flex;align-items:center;gap:10px;height:58px;border-radius:29px;padding:0 8px 0 18px}
+#srIn{flex:1 1 auto;min-width:0;background:none;border:none;outline:none;
+  font-size:16px;font-weight:600;letter-spacing:-.01em;color:inherit}
+#srIn::placeholder{color:inherit;opacity:.55;font-weight:500}
+#srList{margin-top:8px;border-radius:22px;overflow:hidden;max-height:52vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch}
+#srList:empty{display:none}
+#srList .row{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;text-align:left;
+  width:100%;border-bottom:1px solid rgba(128,128,128,.22)}
+#srList .row:last-child{border-bottom:none}
+#srList .row b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+#srList .row small{display:block;font-size:12.5px;opacity:.7;line-height:1.35;margin-top:2px}
+#srList .msg{padding:16px 18px;font-size:14px;opacity:.8}
+#srList .attr{padding:10px 18px 12px;font-size:11.5px;opacity:.6;line-height:1.4}
 #fieldBtn{flex:1 1 auto;min-width:0;height:58px;border-radius:29px;padding:0 10px 0 18px;
   display:flex;align-items:center;gap:12px;text-align:left}
 #fieldBtn .tx{flex:1 1 auto;min-width:0}
@@ -93,7 +112,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 @keyframes pl{50%{opacity:.2}}
 
 /* ---------- bottom nav ---------- */
-#nav{position:fixed;z-index:640;left:10px;right:10px;bottom:var(--nb);
+#nav{position:fixed;z-index:640;left:8px;right:8px;bottom:var(--nb);
   height:var(--navh);border-radius:36px;background:var(--bg);box-shadow:var(--sh);
   border:1px solid var(--line);display:flex;align-items:center;padding:0 6px}
 #nav button{flex:1 1 0;height:62px;border-radius:30px;display:flex;flex-direction:column;
@@ -102,7 +121,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 #nav button[aria-current=true]{background:var(--surf);color:var(--good)}
 
 /* ---------- pages ---------- */
-#page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:calc(0px - var(--sb));
+#page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:0;
   background:var(--bg);overflow-y:auto;
   -webkit-overflow-scrolling:touch;padding:calc(16px + var(--st)) 16px calc(var(--above) + 24px)}
 #page[hidden]{display:none}
@@ -110,7 +129,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .h1sub{color:var(--mute);font-size:13.5px;margin:0 0 18px}
 
 /* ---------- sheets ---------- */
-#scrim{position:fixed;top:0;left:0;right:0;bottom:calc(0px - var(--sb));z-index:700;background:rgba(6,14,12,.45);
+#scrim{position:fixed;top:0;left:0;right:0;bottom:0;z-index:700;background:rgba(6,14,12,.45);
   opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #sheet{position:fixed;z-index:710;left:0;right:0;bottom:0;background:var(--bg);
@@ -233,8 +252,18 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
     <span class="tx"><b id="fbName"></b><small id="fbSub"></small></span>
     <svg class="i" viewBox="0 0 24 24" style="width:20px;opacity:.7"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg>
   </button>
+  <button id="searchBtn" class="fab dark-pill"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
   <button id="langBtn" class="fab dark-pill" style="font-size:15px;font-weight:800"></button>
   <button id="themeBtn" class="fab dark-pill" style="position:relative"><span id="thIco"></span><span id="dot"></span></button>
+</div>
+
+<div id="searchWrap">
+  <div id="srBar" class="dark-pill">
+    <svg class="i" viewBox="0 0 24 24" style="width:22px;opacity:.75;flex:0 0 auto"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input id="srIn" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    <button id="srClose" class="fab dark-pill" style="width:42px;height:42px;box-shadow:none;background:rgba(128,128,128,.22)"><svg class="i" viewBox="0 0 24 24" style="width:20px"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div id="srList" class="dark-pill"></div>
 </div>
 
 <div id="rightcol">
@@ -293,6 +322,9 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ srch:"搜地方", srchPh:"输入地名、城镇或坐标", srchGo:"搜索中…",
+ srchNone:"找不到这个地方。换个写法，或直接输入「纬度, 经度」。",
+ srchFail:"搜索失败：", srchAttr:"地名搜索：Nominatim / © OpenStreetMap 贡献者。由你按下搜索才发出请求，不做边打边搜。",
  nav:{map:"地图",fields:"地块",trend:"趋势",wx:"天气",set:"设置"},
  allFields:"全部地块", season:"季", noField:"还没有地块", tapToDraw:"点 ✎ 画一块",
  lyrSheet:"地图图层", lyr:{OFF:"只看底图",TRUE:"真彩影像",NDVI:"长势",PROD:"产能分区",MOIST:"水分",STREET:"街道图"},
@@ -364,6 +396,9 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ srch:"Find a place", srchPh:"Town, place name, or coordinates", srchGo:"Searching…",
+ srchNone:"No match. Try another spelling, or type \"lat, lon\" directly.",
+ srchFail:"Search failed: ", srchAttr:"Place search: Nominatim / © OpenStreetMap contributors. Sent only when you press search — no type-ahead.",
  nav:{map:"Map",fields:"Fields",trend:"Trends",wx:"Weather",set:"Settings"},
  allFields:"All fields", season:"Season", noField:"No fields yet", tapToDraw:"Tap ✎ to draw one",
  lyrSheet:"Map layer", lyr:{OFF:"Basemap only",TRUE:"True colour",NDVI:"Vegetation",PROD:"Productivity",MOIST:"Moisture",STREET:"Street map"},
@@ -435,6 +470,9 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ srch:"Cari tempat", srchPh:"Nama tempat, pekan, atau koordinat", srchGo:"Mencari…",
+ srchNone:"Tiada padanan. Cuba ejaan lain, atau taip \"lat, lon\" terus.",
+ srchFail:"Carian gagal: ", srchAttr:"Carian tempat: Nominatim / © penyumbang OpenStreetMap. Dihantar hanya bila anda tekan cari — bukan taip-terus-cari.",
  nav:{map:"Peta",fields:"Kebun",trend:"Trend",wx:"Cuaca",set:"Tetapan"},
  allFields:"Semua kebun", season:"Musim", noField:"Tiada kebun lagi", tapToDraw:"Ketik ✎ untuk lukis",
  lyrSheet:"Lapisan peta", lyr:{OFF:"Peta asas sahaja",TRUE:"Warna asli",NDVI:"Tumbuhan",PROD:"Produktiviti",MOIST:"Lembapan",STREET:"Peta jalan"},
@@ -781,6 +819,8 @@ function renderTop(){
   $("fbSub").textContent = f?`${ringAreaHa(f.ring).toFixed(2)} ${t().ha}`
     : (fields.length?`${fields.length} · ${t().season} ${new Date().getFullYear()}`:t().tapToDraw);
   $("layerName").textContent=t().lyr[layerKey];
+  $("srIn").placeholder=t().srchPh;
+  $("searchBtn").title=t().srch;
 }
 function renderNav(){
   const ks=["map","fields","trend","wx","set"], icn={map:"map",fields:"fields",trend:"trend",wx:"wx",set:"set"};
@@ -791,6 +831,7 @@ function renderNav(){
 function mapChromeVisible(){
   const m=view==="map", w=view==="wx", onMap=m||w;
   $("topbar").style.display=onMap?"":"none";
+  if(!onMap) srOpen(false);
   $("rightcol").style.display=onMap?"":"none";
   $("layerPill").style.display=m?"":"none";
   $("btnDraw").hidden=!m;
@@ -905,6 +946,88 @@ $("btnDraw").onclick=()=>{
   }
 };
 $("btnUndo").onclick=()=>{draftPts.pop();refreshDraft();};
+/* ===================== place search (Nominatim) ===================== */
+/* Policy: https://operations.osmfoundation.org/policies/nominatim/
+   - no client-side auto-complete -> we fire ONLY on explicit submit
+   - max 1 req/sec -> hard throttle below
+   - attribution shown in the result panel                            */
+let srLast = 0, srBusy = false;
+
+function srOpen(on){
+  $("searchWrap").classList.toggle("on", on);
+  $("topbar").style.visibility = on ? "hidden" : "";
+  if(on){ $("srIn").value=""; $("srList").innerHTML=""; setTimeout(()=>$("srIn").focus(),40); }
+  else { $("srIn").blur(); }
+}
+function srMsg(html){ $("srList").innerHTML = `<div class="msg">${html}</div>`; }
+
+/* "3.85, 102.45" -> jump straight there, no network call at all */
+function srCoords(q){
+  const m = q.trim().match(/^(-?\d{1,2}(?:\.\d+)?)\s*[, ]\s*(-?\d{1,3}(?:\.\d+)?)$/);
+  if(!m) return null;
+  const la=+m[1], lo=+m[2];
+  if(!isFinite(la)||!isFinite(lo)||Math.abs(la)>90||Math.abs(lo)>180) return null;
+  return [la,lo];
+}
+
+async function srRun(){
+  const q = $("srIn").value.trim();
+  if(q.length < 2) return;
+
+  const c = srCoords(q);
+  if(c){ srGo(c[0], c[1], null); return; }
+
+  if(srBusy) return;
+  const wait = 1100 - (Date.now() - srLast);          // >= 1 req/sec
+  if(wait > 0) await new Promise(r=>setTimeout(r, wait));
+
+  srBusy = true; srLast = Date.now(); srMsg(t().srchGo);
+  try{
+    const al = {zh:"zh",en:"en",ms:"ms"}[lang] || "en";
+    const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6"
+            + "&accept-language=" + al + "&q=" + encodeURIComponent(q);
+    const r = await fetch(u, {headers:{Accept:"application/json"}});
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const rows = await r.json();
+    if(!Array.isArray(rows) || !rows.length){ srMsg(t().srchNone); return; }
+    $("srList").innerHTML = rows.map((x,i)=>{
+      const parts = String(x.display_name||"").split(",");
+      const head = parts.shift().trim();
+      return `<button class="row" data-i="${i}">`
+           + `<svg class="i" viewBox="0 0 24 24" style="width:20px;opacity:.65;margin-top:2px;flex:0 0 auto">`
+           + `<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>`
+           + `<span><b>${esc(head)}</b><small>${esc(parts.join(",").trim())}</small></span></button>`;
+    }).join("") + `<div class="attr">${t().srchAttr}</div>`;
+    $("srList").querySelectorAll(".row").forEach(b=>{
+      b.onclick = ()=>{
+        const x = rows[+b.dataset.i];
+        srGo(+x.lat, +x.lon, x.boundingbox);
+      };
+    });
+  }catch(e){
+    srMsg(t().srchFail + (e.message||e));
+  }finally{ srBusy = false; }
+}
+
+function srGo(la, lo, bb){
+  if(Array.isArray(bb) && bb.length === 4){
+    const s_=+bb[0], n_=+bb[1], w_=+bb[2], e_=+bb[3];
+    if([s_,n_,w_,e_].every(isFinite) && (n_-s_)>1e-6 && (e_-w_)>1e-6){
+      map.fitBounds([[s_,w_],[n_,e_]], {maxZoom:16, padding:[40,40]});
+      srOpen(false); return;
+    }
+  }
+  map.setView([la,lo], 16);
+  srOpen(false);
+}
+
+$("searchBtn").onclick = ()=>srOpen(true);
+$("srClose").onclick  = ()=>srOpen(false);
+$("srIn").addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); srRun(); }
+  if(e.key === "Escape"){ srOpen(false); }
+});
+
 $("btnLoc").onclick=()=>{
   if(!navigator.geolocation) return setStatus("bad",t().locNo);
   setStatus("busy",t().locating);
