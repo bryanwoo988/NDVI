@@ -31,7 +31,7 @@
   /* nav sits just above the home indicator, not a full inset below it */
   --gap:0px;
   --nb:0px;
-  --navh:64px;
+  --navh:70px;
   --above:calc(var(--navh) + 12px);
 }
 :root[data-theme=dark]{
@@ -61,7 +61,6 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 
 /* ---------- map ---------- */
 #map{position:fixed;top:0;left:0;right:0;bottom:0;
-  bottom:calc(0px - var(--gap));
   background:var(--surf)}
 .leaflet-container{background:var(--surf);font-family:inherit}
 .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#fff!important;
@@ -120,17 +119,16 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 @keyframes pl{50%{opacity:.2}}
 
 /* ---------- bottom nav ---------- */
-#nav{position:fixed;z-index:640;left:0;right:0;bottom:0;
-  height:var(--navh);background:var(--navbg);
-  border-top:1px solid var(--line);display:flex;align-items:flex-start;padding:4px 6px 0}
-#nav button{flex:1 1 0;height:54px;border-radius:30px;display:flex;flex-direction:column;
+#nav{position:fixed;z-index:640;left:8px;right:8px;bottom:0;
+  height:var(--navh);border-radius:36px;background:var(--bg);box-shadow:var(--sh);
+  border:1px solid var(--line);display:flex;align-items:center;padding:0 6px}
+#nav button{flex:1 1 0;height:60px;border-radius:30px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;color:var(--mute);min-width:0}
 #nav button b{font-size:11.5px;font-weight:600;letter-spacing:-.01em}
-#nav button[aria-current=true]{background:var(--navsel);color:var(--good)}
+#nav button[aria-current=true]{background:var(--surf);color:var(--good)}
 
 /* ---------- pages ---------- */
 #page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:0;
-  bottom:calc(0px - var(--gap));
   background:var(--bg);overflow-y:auto;
   -webkit-overflow-scrolling:touch;padding:calc(16px + var(--st)) 16px calc(var(--above) + 24px)}
 #page[hidden]{display:none}
@@ -141,8 +139,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .h1sub{color:var(--mute);font-size:13.5px;margin:0 0 18px}
 
 /* ---------- sheets ---------- */
-#scrim{position:fixed;top:0;left:0;right:0;bottom:0;
-  bottom:calc(0px - var(--gap));z-index:700;background:rgba(6,14,12,.45);
+#scrim{position:fixed;top:0;left:0;right:0;bottom:0;z-index:700;background:rgba(6,14,12,.45);
   opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #sheet{position:fixed;z-index:710;left:0;right:0;bottom:0;background:var(--bg);
@@ -311,6 +308,26 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 "use strict";
 const APP_NAME = "OneSoil";
 
+/* ============================================================
+   BUILT-IN CREDENTIALS — fill these four in and your users
+   never see a settings form. Leave any of them "" to fall back
+   to per-device entry.
+
+   NEVER put an OAuth client secret here. This file is public.
+   The secret belongs in the Cloudflare Worker; PROXY below is
+   only the Worker's URL, which is safe to publish.
+   ============================================================ */
+const BUILT_IN = {
+  instanceId : "",                 // Sentinel Hub Instance ID
+  proxy      : "",                 // https://cdse-token.<you>.workers.dev
+  gkey       : "",                 // Google Places key, referrer-restricted
+  layerTrue  : "TRUE-COLOR",
+  layerNdvi  : "NDVI",
+  layerMoist : "MOISTURE-INDEX",
+  layerProd  : "PRODUCTIVITY"
+};
+const PRECONFIGURED = !!BUILT_IN.instanceId;
+
 /* ===================== icons ===================== */
 const IC = {
   map:`<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/>`,
@@ -336,6 +353,8 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ setT7:"已经设定好了", preNote:"图层、天气、搜索都已经由开发者设好，你不用填任何东西，直接用就行。",
+ advShow:"我要自己填（进阶）", advHide:"收起进阶设定",
  setT6:"地块备份", bkNote:"地块只存在这台手机的浏览器里。iOS 会在空间不足、清纪录、或删掉主画面图标时把它清掉，所以请自己留一份。把下面整段文字复制去备忘录或 WhatsApp 给自己，就是完整备份。",
  bkCopy:"复制备份", bkCopied:"已复制", bkFile:"下载成档案", bkPasteL:"贴上备份文字，按还原",
  bkRestore:"还原", bkBad:"这段文字不是有效的备份", bkAdded:"已加入 ", bkSkip:" 块（重复的略过）",
@@ -418,6 +437,8 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ setT7:"Already set up", preNote:"Layers, weather and search are configured by the developer. Nothing to fill in — just use the app.",
+ advShow:"Use my own keys (advanced)", advHide:"Hide advanced settings",
  setT6:"Field backup", bkNote:"Fields live only in this phone's browser. iOS clears that when storage runs low, when you clear history, or when you delete the home-screen icon. Keep your own copy: copy the text below into Notes or message it to yourself.",
  bkCopy:"Copy backup", bkCopied:"Copied", bkFile:"Download as file", bkPasteL:"Paste a backup here, then Restore",
  bkRestore:"Restore", bkBad:"That text is not a valid backup", bkAdded:"Added ", bkSkip:" field(s); duplicates skipped",
@@ -500,6 +521,8 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ setT7:"Sudah disediakan", preNote:"Lapisan, cuaca dan carian telah disediakan oleh pembangun. Tiada apa perlu diisi.",
+ advShow:"Guna kunci sendiri (lanjutan)", advHide:"Sembunyikan tetapan lanjutan",
  setT6:"Sandaran lot", bkNote:"Lot disimpan dalam pelayar telefon ini sahaja. iOS akan memadamnya bila ruang simpanan rendah, bila anda kosongkan sejarah, atau bila ikon skrin utama dipadam. Simpan salinan sendiri.",
  bkCopy:"Salin sandaran", bkCopied:"Disalin", bkFile:"Muat turun fail", bkPasteL:"Tampal sandaran di sini, kemudian Pulihkan",
  bkRestore:"Pulihkan", bkBad:"Teks itu bukan sandaran yang sah", bkAdded:"Ditambah ", bkSkip:" lot; pendua dilangkau",
@@ -585,32 +608,45 @@ let lang = localStorage.getItem("os.lang"); if(!LANGS.includes(lang)) lang="zh";
 const t = () => T[lang];
 
 /* ===================== state ===================== */
+const savedCfg = JSON.parse(localStorage.getItem("os.cfg")||"{}");
+/* An empty string saved on this device must not blank out a built-in value. */
+for(const k of Object.keys(savedCfg)) if(savedCfg[k]==="") delete savedCfg[k];
 const cfg = Object.assign({
   instanceId:"",clientId:"",clientSecret:"",proxy:"",gkey:"",
   layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:30
-}, JSON.parse(localStorage.getItem("os.cfg")||"{}"));
+}, BUILT_IN, savedCfg);
 let fields = JSON.parse(localStorage.getItem("os.fields")||"[]");
 let activeId = fields[0]?fields[0].id:null;
 let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-i";
-/* iOS under-reports env(safe-area-inset-bottom) in standalone mode: on the
-   test device it said 31px when the webview was actually 51px short of the
-   screen. So measure the shortfall directly and let CSS use that. Where the
-   webview already fills the screen this comes out 0 and changes nothing. */
+const BUILD = "2026-09-26-m";
+let advOpen = false;
+/* Diagnostic only. iOS standalone hands us a webview shorter than the screen
+   (761 of 812 on the test device) and changes its mind after the keyboard
+   appears. Nothing in the layout depends on this number any more. */
 function measureGap(){
   const standalone = (navigator.standalone===true) || matchMedia("(display-mode: standalone)").matches;
   let gap = 0;
   if(standalone && screen.height > innerHeight) gap = screen.height - innerHeight;
-  if(!isFinite(gap) || gap < 0 || gap > 120) gap = 0;   // refuse anything absurd
+  if(!isFinite(gap) || gap < 0 || gap > 120) gap = 0;
   document.documentElement.style.setProperty("--gap", gap.toFixed(0)+"px");
-  if(window.map) map.invalidateSize(false);
   return gap;
 }
-addEventListener("resize", measureGap);
-addEventListener("orientationchange", ()=>setTimeout(measureGap,300));
+
+/* An on-screen keyboard shrinks innerHeight by hundreds of pixels. Reacting
+   to that would resize the map twice per field the user taps, so sit still
+   while a field has focus and catch up once it is released. */
+function viewportChanged(){
+  const a = document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+  measureGap();
+  if(window.map) map.invalidateSize(false);
+}
+addEventListener("resize", viewportChanged);
+addEventListener("orientationchange", ()=>setTimeout(viewportChanged,300));
+addEventListener("focusout", ()=>setTimeout(viewportChanged,250));
 
 function layoutDiag(){
   const probe=document.createElement("div");
@@ -744,11 +780,15 @@ function setStatus(k,txt){
 let token=null,tokenExp=0;
 async function getToken(){
   if(token && Date.now()<tokenExp-6e4) return token;
-  if(!cfg.clientId||!cfg.clientSecret) throw new Error(t().noToken);
+  /* With a proxy the credentials live in the proxy, not here, so the app
+     needs no client id or secret at all. Without one we must send them. */
+  if(!cfg.proxy && (!cfg.clientId || !cfg.clientSecret)) throw new Error(t().noToken);
   const url = cfg.proxy || "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token";
+  const body = cfg.proxy
+    ? new URLSearchParams({grant_type:"client_credentials"})
+    : new URLSearchParams({grant_type:"client_credentials",client_id:cfg.clientId,client_secret:cfg.clientSecret});
   let r;
-  try{ r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:new URLSearchParams({grant_type:"client_credentials",client_id:cfg.clientId,client_secret:cfg.clientSecret})});
+  try{ r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});
   }catch(e){ throw new Error(t().corsErr+e.message); }
   if(!r.ok) throw new Error(t().tokFail+r.status+" · "+(await r.text()).slice(0,180));
   const j=await r.json(); token=j.access_token; tokenExp=Date.now()+(j.expires_in||600)*1000;
@@ -1364,6 +1404,7 @@ function pgSet(){
   <div class="card"><h3>${t().setT1}</h3>
     <ol class="plain">${t().setSteps.map(s=>`<li>${s}</li>`).join("")}</ol>
     <p class="sub" style="margin-top:10px">${t().setQuota}</p></div>
+  ${(PRECONFIGURED && !advOpen) ? `<div class="card"><h3>${t().setT7}</h3><p class="sub">${t().preNote}</p><button class="btn wide alt" id="advOn" style="margin-top:10px">${t().advShow}</button></div>` : `
   <div class="card"><h3>${t().setT2}</h3>
     <label class="f">${t().setInst}</label><input type="text" id="cInst" value="${esc(cfg.instanceId)}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
     <label class="f">${t().setLn}</label><input type="text" id="cLn" value="${esc(cfg.layerNdvi)}">
@@ -1376,6 +1417,8 @@ function pgSet(){
     <label class="f">Client Secret</label><input type="password" id="cSec" value="${esc(cfg.clientSecret)}" autocomplete="off">
     <label class="f">${t().setProxy}</label><input type="text" id="cPrx" value="${esc(cfg.proxy)}" placeholder="https://your-worker.workers.dev/token">
     <div class="msg err">${t().setSecWarn}</div></div>
+  ${PRECONFIGURED ? `<button class="btn wide alt" id="advOff">${t().advHide}</button>` : ``}
+  `}
   <div class="card"><h3>${t().setT6}</h3>
     <p class="sub">${t().bkNote}</p>
     <textarea id="bkOut" readonly style="margin-top:10px">${esc(JSON.stringify({v:1,fields}))}</textarea>
@@ -1432,6 +1475,8 @@ function bindPage(){
     setStatus("ok",t().cfgSaved);
     $("testOut").innerHTML=`<div class="msg info">${t().cfgSaved}</div>`;
   };
+  if($("advOn"))  $("advOn").onclick  = ()=>{ advOpen=true;  renderPage(); };
+  if($("advOff")) $("advOff").onclick = ()=>{ advOpen=false; renderPage(); };
   if($("bkCopy")) $("bkCopy").onclick=async()=>{
     try{ await navigator.clipboard.writeText($("bkOut").value); }
     catch(_){ $("bkOut").select(); document.execCommand("copy"); }
@@ -1476,7 +1521,7 @@ function bindPage(){
         if(n.length) L.push("　"+t().tAvail+n.slice(0,12).join(" · "));
       }catch(e){L.push("⚠️ "+t().tWMS+" — "+t().tWmsCors);}
     } else L.push("❌ "+t().tNoInst);
-    if(cfg.clientId&&cfg.clientSecret){
+    if(cfg.proxy || (cfg.clientId&&cfg.clientSecret)){
       try{await getToken();L.push("✅ "+t().tOAuth+" — "+t().tGot);}
       catch(e){L.push("❌ "+t().tOAuth+" — "+e.message);}
     } else L.push("— "+t().tSkipOAuth);
