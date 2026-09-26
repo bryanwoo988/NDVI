@@ -353,6 +353,8 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ secShow:"显示 / 隐藏 Secret",
+ tMissing:"配置里找不到这几个图层名：", tAllMatch:"四个图层名都对得上",
  setT7:"已经设定好了", preNote:"图层、天气、搜索都已经由开发者设好，你不用填任何东西，直接用就行。",
  advShow:"我要自己填（进阶）", advHide:"收起进阶设定",
  setT6:"地块备份", bkNote:"地块只存在这台手机的浏览器里。iOS 会在空间不足、清纪录、或删掉主画面图标时把它清掉，所以请自己留一份。把下面整段文字复制去备忘录或 WhatsApp 给自己，就是完整备份。",
@@ -437,6 +439,8 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ secShow:"Show / hide secret",
+ tMissing:"Not present in the configuration: ", tAllMatch:"All four layer names match",
  setT7:"Already set up", preNote:"Layers, weather and search are configured by the developer. Nothing to fill in — just use the app.",
  advShow:"Use my own keys (advanced)", advHide:"Hide advanced settings",
  setT6:"Field backup", bkNote:"Fields live only in this phone's browser. iOS clears that when storage runs low, when you clear history, or when you delete the home-screen icon. Keep your own copy: copy the text below into Notes or message it to yourself.",
@@ -521,6 +525,8 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ secShow:"Papar / sembunyi secret",
+ tMissing:"Tiada dalam konfigurasi: ", tAllMatch:"Keempat-empat nama lapisan sepadan",
  setT7:"Sudah disediakan", preNote:"Lapisan, cuaca dan carian telah disediakan oleh pembangun. Tiada apa perlu diisi.",
  advShow:"Guna kunci sendiri (lanjutan)", advHide:"Sembunyikan tetapan lanjutan",
  setT6:"Sandaran lot", bkNote:"Lot disimpan dalam pelayar telefon ini sahaja. iOS akan memadamnya bila ruang simpanan rendah, bila anda kosongkan sejarah, atau bila ikon skrin utama dipadam. Simpan salinan sendiri.",
@@ -621,7 +627,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-m";
+const BUILD = "2026-09-26-o";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -789,7 +795,12 @@ async function getToken(){
     : new URLSearchParams({grant_type:"client_credentials",client_id:cfg.clientId,client_secret:cfg.clientSecret});
   let r;
   try{ r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});
-  }catch(e){ throw new Error(t().corsErr+e.message); }
+  }catch(e){
+    /* Say which host we actually tried. "Load failed" alone cannot tell you
+       whether the proxy is in use or the request went straight to CDSE. */
+    const via = cfg.proxy ? ("proxy: "+url) : "DIRECT to identity.dataspace.copernicus.eu (no proxy set)";
+    throw new Error(t().corsErr + e.message + " · " + via);
+  }
   if(!r.ok) throw new Error(t().tokFail+r.status+" · "+(await r.text()).slice(0,180));
   const j=await r.json(); token=j.access_token; tokenExp=Date.now()+(j.expires_in||600)*1000;
   return token;
@@ -1060,6 +1071,32 @@ $("btnInfo").onclick=()=>{
     <button class="btn wide alt" id="closeSrc" style="margin-top:6px">OK</button>`);
   bindSheet();
 };
+
+/* Pull only layer identifiers out of a WMS capabilities document.
+   A naive /<Name>…<\/Name>/g also catches the service name and every
+   <Style><Name>, which pushed the real layers past the display limit. */
+function wmsLayerNames(xml){
+  const out = [];
+  try{
+    const doc = new DOMParser().parseFromString(xml, "text/xml");
+    if(doc.querySelector("parsererror")) throw new Error("bad xml");
+    for(const layer of doc.getElementsByTagName("Layer")){
+      for(const kid of layer.children){
+        if(kid.tagName === "Name"){                 // direct child only
+          const v = (kid.textContent||"").trim();
+          if(v && !out.includes(v)) out.push(v);
+          break;                                     // ignore Style > Name
+        }
+      }
+    }
+  }catch(_){
+    for(const m of xml.matchAll(/<Layer[^>]*>\s*<Name>([^<]+)<\/Name>/g)){
+      const v = m[1].trim();
+      if(v && !out.includes(v)) out.push(v);
+    }
+  }
+  return out;
+}
 
 /* ===================== drawing ===================== */
 const DRAW_ICON = `<svg class="i" viewBox="0 0 24 24"><path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/></svg>`;
@@ -1414,7 +1451,8 @@ function pgSet(){
     <p class="sub" style="margin-top:10px">${t().setLayerNote}</p></div>
   <div class="card"><h3>${t().setT3}</h3>
     <label class="f">Client ID</label><input type="text" id="cCid" value="${esc(cfg.clientId)}" autocomplete="off">
-    <label class="f">Client Secret</label><input type="password" id="cSec" value="${esc(cfg.clientSecret)}" autocomplete="off">
+    <label class="f">Client Secret</label><input type="password" id="cSec" autocomplete="off" value="${esc(cfg.clientSecret)}" autocomplete="off">
+    <button class="btn wide alt" id="secShow" style="margin-top:8px">${t().secShow}</button>
     <label class="f">${t().setProxy}</label><input type="text" id="cPrx" value="${esc(cfg.proxy)}" placeholder="https://your-worker.workers.dev/token">
     <div class="msg err">${t().setSecWarn}</div></div>
   ${PRECONFIGURED ? `<button class="btn wide alt" id="advOff">${t().advHide}</button>` : ``}
@@ -1475,6 +1513,9 @@ function bindPage(){
     setStatus("ok",t().cfgSaved);
     $("testOut").innerHTML=`<div class="msg info">${t().cfgSaved}</div>`;
   };
+  if($("secShow")) $("secShow").onclick = ()=>{
+    const el=$("cSec"); el.type = el.type==="password" ? "text" : "password";
+  };
   if($("advOn"))  $("advOn").onclick  = ()=>{ advOpen=true;  renderPage(); };
   if($("advOff")) $("advOff").onclick = ()=>{ advOpen=false; renderPage(); };
   if($("bkCopy")) $("bkCopy").onclick=async()=>{
@@ -1517,8 +1558,13 @@ function bindPage(){
       try{const r=await fetch(`${wmsUrl()}?service=WMS&request=GetCapabilities&version=1.3.0`);
         const txt=await r.text(); const ok=r.ok&&txt.indexOf("WMS_Capabilities")>-1;
         L.push((ok?"✅ ":"⚠️ ")+t().tWMS+" — "+(ok?t().tPass:"HTTP "+r.status));
-        const n=[...txt.matchAll(/<Name>([^<]+)<\/Name>/g)].map(m=>m[1]);
-        if(n.length) L.push("　"+t().tAvail+n.slice(0,12).join(" · "));
+        const n = wmsLayerNames(txt);
+        if(n.length){
+          L.push("　"+t().tAvail+n.join(" · "));
+          const want = {NDVI:cfg.layerNdvi, TRUE:cfg.layerTrue, MOIST:cfg.layerMoist, PROD:cfg.layerProd};
+          const miss = Object.entries(want).filter(([,v]) => v && !n.includes(v)).map(([k,v]) => k+"="+v);
+          L.push(miss.length ? "　❌ "+t().tMissing+miss.join(" · ") : "　✅ "+t().tAllMatch);
+        }
       }catch(e){L.push("⚠️ "+t().tWMS+" — "+t().tWmsCors);}
     } else L.push("❌ "+t().tNoInst);
     if(cfg.proxy || (cfg.clientId&&cfg.clientSecret)){
