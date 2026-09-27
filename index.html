@@ -321,10 +321,10 @@ const BUILT_IN = {
   instanceId : "c31b98a4-0a23-45f8-ae81-32f02901934a",
   proxy      : "https://cdse-token.hockhynnwoo.workers.dev",
   gkey       : "",                 // Google Places key, referrer-restricted
-  layerTrue  : "TRUE-COLOR",
-  layerNdvi  : "NDVI",
-  layerMoist : "MOISTURE-INDEX",
-  layerProd  : "PRODUCTIVITY"
+  layerTrue  : "TRUE_COLOR",       // this configuration uses underscores
+  layerNdvi  : "VEGETATION_INDEX", // the L2A template calls NDVI this
+  layerMoist : "MOISTURE_INDEX",
+  layerProd  : "PRODUCTIVITY"      // still has to be created in CDSE, Mosaicking = ORBIT
 };
 const PRECONFIGURED = !!BUILT_IN.instanceId;
 
@@ -627,7 +627,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-q";
+const BUILD = "2026-09-26-r";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
