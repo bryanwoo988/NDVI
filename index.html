@@ -233,6 +233,21 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .hcell.sel .bar{background:rgba(16,26,23,.12)}
 .hcell .bar i{width:100%;background:#4DA3FF;border-radius:9px;min-height:2px}
 .hcell small{font-size:10.5px;opacity:.78;font-weight:600}
+#mapLegend{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:617;
+  display:none;background:var(--chrome);color:var(--chrome-ink);border-radius:18px;
+  padding:12px 12px 10px;box-shadow:var(--sh-s);backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);max-width:132px}
+#mapLegend.on{display:block}
+#mapLegend .lgTitle{font-size:12px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px}
+#mapLegend .lgIdx{display:block;font-style:normal;font-size:10px;font-weight:700;
+  opacity:.62;letter-spacing:.04em;margin-top:1px}
+#mapLegend .lgBody{display:flex;gap:8px}
+#mapLegend .lgBar{width:14px;border-radius:7px;flex:0 0 auto}
+#mapLegend .lgTicks{display:flex;flex-direction:column;justify-content:space-between;
+  font-size:10.5px;line-height:1.15;opacity:.95}
+#mapLegend .lgTicks b{font-weight:700;font-variant-numeric:tabular-nums}
+#mapLegend .lgTicks i{font-style:normal;opacity:.72;display:block;font-size:9.5px}
+#mapLegend .lgFoot{margin-top:9px;font-size:9.5px;line-height:1.3;opacity:.7}
 #wxLegend{position:fixed;left:14px;top:46%;transform:translateY(-50%);z-index:616;
   width:13px;height:180px;border-radius:7px;display:none;box-shadow:var(--sh-s);
   background:linear-gradient(to top,#9AD8FF,#3D9BFF,#1E4FD6,#8A2BD6,#D8306B)}
@@ -294,6 +309,12 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 </div>
 
 <div id="wxLegend"><span style="top:-6px" id="lgHi"></span><span style="bottom:-6px" id="lgLo"></span></div>
+<div id="mapLegend">
+  <div class="lgTitle" id="lgTitle"></div>
+  <div class="lgBody"><div class="lgBar" id="lgBar"></div>
+    <div class="lgTicks" id="lgTicks"></div></div>
+  <div class="lgFoot" id="lgFoot"></div>
+</div>
 <div id="wxwrap">
   <button id="wxCard"></button>
   <div id="wxTrack"></div>
@@ -365,6 +386,10 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ setT8:"长势 / 水分图层脚本（选用）",
+ idxNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
+ lg:{dense:"树冠浓密",vig:"长势佳",sparse:"稀疏",bare:"裸露",wet:"含水高",ok:"正常",low:"偏低",dry:"干"},
+ lgExact:"色阶与产能脚本一致", lgApprox:"色阶依你 CDSE 配置里的脚本而定",
  wxErr:"这个位置没有逐小时预报资料",
  seeMap:"看地图",
  secShow:"显示 / 隐藏 Secret",
@@ -453,6 +478,10 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ setT8:"Vegetation / moisture layer scripts (optional)",
+ idxNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
+ lg:{dense:"dense canopy",vig:"vigorous",sparse:"sparse",bare:"bare",wet:"wet",ok:"normal",low:"low",dry:"dry"},
+ lgExact:"matches the productivity script", lgApprox:"depends on the script in your CDSE layer",
  wxErr:"No hourly forecast for this location",
  seeMap:"See the map",
  secShow:"Show / hide secret",
@@ -541,6 +570,10 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ setT8:"Skrip lapisan tumbuhan / lembapan (pilihan)",
+ idxNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
+ lg:{dense:"kanopi tebal",vig:"subur",sparse:"jarang",bare:"tanah kosong",wet:"lembap",ok:"biasa",low:"rendah",dry:"kering"},
+ lgExact:"sepadan dengan skrip produktiviti", lgApprox:"bergantung pada skrip dalam konfigurasi CDSE anda",
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
  seeMap:"Lihat peta",
  secShow:"Papar / sembunyi secret",
@@ -645,7 +678,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-y";
+const BUILD = "2026-09-27-b";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -737,6 +770,7 @@ const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${
 let satDate = new Date().toISOString().slice(0,10), satWin = 30;
 function applyLayer(){
   swapBase();
+  renderLegend();
   if(wmsLayer){map.removeLayer(wmsLayer); wmsLayer=null;}
   const m = {NDVI:cfg.layerNdvi,MOIST:cfg.layerMoist,PROD:cfg.layerProd,TRUE:cfg.layerTrue,OFF:"",STREET:""};
   const name = m[layerKey]||"";
@@ -1033,6 +1067,7 @@ function mapChromeVisible(){
   $("btnRadar").classList.toggle("on",radarOn);
   $("wxwrap").classList.toggle("on",w);
   $("wxLegend").style.display=(w&&radarOn)?"block":"none";
+  renderLegend();
   $("lgHi").textContent=t().lgHeavy; $("lgLo").textContent=t().lgLight;
 }
 function renderAll(){
@@ -1157,6 +1192,63 @@ function wmsLayerNames(xml){
     }
   }
   return out;
+}
+
+
+/* ===================== map legend =====================
+   PROD is exact: the five classes below are the same breaks and colours as
+   the productivity evalscript in Settings, so the legend cannot drift from
+   the picture. NDVI and NDMI are drawn by whatever evalscript sits in the
+   CDSE configuration, so these ramps match the scripts offered in Settings;
+   if the configuration uses a different ramp, the colours will not agree. */
+const LEGENDS = {
+  NDVI: {
+    index:"NDVI",
+    exact:false,
+    stops:[[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]],
+    ticks:[[1.0,"1.0","dense"],[0.6,"0.6","vig"],[0.2,"0.2","sparse"],[0.0,"0.0","bare"]]
+  },
+  MOIST: {
+    index:"NDMI",
+    exact:false,
+    stops:[[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]],
+    ticks:[[1.0,"1.0","wet"],[0.3,"0.3","ok"],[0.0,"0.0","low"],[-0.5,"-0.5","dry"]]
+  },
+  PROD: {
+    index:"NDVI · 3-year mean",
+    exact:true,
+    classes:[["#A1522E","< 0.30","low"],["#D4A62B","0.30 – 0.45",""],
+             ["#99CC33","0.45 – 0.60",""],["#3DB34A","0.60 – 0.72",""],
+             ["#0A5C29","≥ 0.72","high"]]
+  }
+};
+
+function renderLegend(){
+  const box=$("mapLegend"), def=LEGENDS[layerKey];
+  if(!def || view!=="map"){ box.classList.remove("on"); return; }
+  box.classList.add("on");
+  $("lgTitle").innerHTML = `${esc(t().lyr[layerKey])}<i class="lgIdx">${def.index}</i>`;
+
+  if(def.classes){
+    /* discrete: one block per class, so the legend reads the same way the
+       map does — five flat colours, not a gradient */
+    const n=def.classes.length;
+    $("lgBar").style.background =
+      "linear-gradient(to top," + def.classes.map((c,i)=>
+        `${c[0]} ${(i/n*100).toFixed(1)}%,${c[0]} ${((i+1)/n*100).toFixed(1)}%`).join(",") + ")";
+    $("lgBar").style.height = (n*26)+"px";
+    $("lgTicks").innerHTML = def.classes.slice().reverse()
+      .map(c=>`<span style="height:26px;display:flex;align-items:center"><b>${c[1]}</b></span>`).join("");
+  } else {
+    const lo=def.stops[0][0], hi=def.stops[def.stops.length-1][0], span=hi-lo;
+    $("lgBar").style.background =
+      "linear-gradient(to top," + def.stops.map(([v,c])=>
+        `${c} ${(((v-lo)/span)*100).toFixed(1)}%`).join(",") + ")";
+    $("lgBar").style.height = "150px";
+    $("lgTicks").innerHTML = def.ticks
+      .map(([,lab,sub])=>`<span><b>${lab}</b>${sub?`<i>${t().lg[sub]||sub}</i>`:""}</span>`).join("");
+  }
+  $("lgFoot").textContent = def.exact ? t().lgExact : t().lgApprox;
 }
 
 /* ===================== drawing ===================== */
@@ -1484,6 +1576,33 @@ function wxDetailSheet(){
     <button class="btn wide alt" id="closeSrc" style="margin-top:6px">${t().close}</button>`);
   bindSheet();
 }
+const IDX_SCRIPT = (name, expr, stops) => `//VERSION=3
+// ${name} with SCL cloud masking. Colours match the legend in the app.
+// Paste into the matching layer in the CDSE Configuration Utility.
+function setup(){return{
+  input:[{bands:["B04","B08","B11","SCL","dataMask"]}],
+  output:{bands:4}
+};}
+const ramp = [
+${stops.map(([v,c])=>`  [${v}, ${JSON.stringify(c)}]`).join(",\n")}
+];
+const vis = new ColorRampVisualizer(ramp);
+function evaluatePixel(s){
+  // 4,5,6,7 = vegetation, bare soil, water, unclassified. Everything else
+  // (cloud, shadow, snow, saturated) is dropped rather than coloured.
+  var clear = [4,5,6,7].indexOf(s.SCL) >= 0 && s.dataMask === 1;
+  if(!clear) return [0,0,0,0];
+  var v = ${expr};
+  var c = vis.process(v);
+  return [c[0], c[1], c[2], 1];
+}`;
+
+const NDVI_SCRIPT = IDX_SCRIPT("NDVI", "(s.B08 - s.B04) / (s.B08 + s.B04)",
+  [[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]]);
+
+const NDMI_SCRIPT = IDX_SCRIPT("NDMI", "(s.B08 - s.B11) / (s.B08 + s.B11)",
+  [[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]]);
+
 const PROD_SCRIPT=`//VERSION=3
 // Multi-year mean NDVI -> productivity zones
 function setup(){return{
@@ -1545,6 +1664,14 @@ function pgSet(){
     <p class="sub">${t().setProdNote}</p>
     <textarea id="prodScript" readonly>${esc(PROD_SCRIPT)}</textarea>
     <button class="btn wide alt" id="copyProd" style="margin-top:10px">${t().copy}</button></div>
+  <div class="card"><h3>${t().setT8}</h3>
+    <p class="sub">${t().idxNote}</p>
+    <label class="f" style="margin-top:12px">VEGETATION_INDEX</label>
+    <textarea id="ndviScript" readonly>${esc(NDVI_SCRIPT)}</textarea>
+    <button class="btn wide alt" id="copyNdvi" style="margin-top:10px">${t().copy}</button>
+    <label class="f" style="margin-top:16px">MOISTURE_INDEX</label>
+    <textarea id="ndmiScript" readonly>${esc(NDMI_SCRIPT)}</textarea>
+    <button class="btn wide alt" id="copyNdmi" style="margin-top:10px">${t().copy}</button></div>
   <button class="btn wide" id="saveCfg">${t().save}</button>
   <button class="btn wide alt" id="testConn" style="margin-top:10px">${t().test}</button>
   <div id="testOut" style="margin-top:12px"></div>`;
@@ -1617,6 +1744,15 @@ function bindPage(){
     $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}</div>`;
     $("bkIn").value="";
   };
+  const copyBtn=(id,txt)=>{ const b=$(id); if(!b) return;
+    b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }
+      catch(_){ const ta=document.createElement("textarea"); ta.value=txt;
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+      const old=b.textContent; b.textContent=t().copied;
+      setTimeout(()=>{ b.textContent=old; }, 1400); };
+  };
+  copyBtn("copyNdvi", NDVI_SCRIPT);
+  copyBtn("copyNdmi", NDMI_SCRIPT);
   if($("copyProd")) $("copyProd").onclick=async()=>{
     const b=$("copyProd");
     try{await navigator.clipboard.writeText(PROD_SCRIPT);b.textContent=t().copied;}
