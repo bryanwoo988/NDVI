@@ -396,6 +396,7 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ tTiles:"实际取一张瓦片：", tBlank:"回传空白图（该条件下没有可用影像）",
  setT8:"长势 / 水分图层脚本（选用）",
  idxNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
  lg:{dense:"树冠浓密",vig:"长势佳",sparse:"稀疏",bare:"裸露",wet:"含水高",ok:"正常",low:"偏低",dry:"干"},
@@ -488,6 +489,7 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ tTiles:"Real tile request:", tBlank:"blank image returned (no usable scene for these settings)",
  setT8:"Vegetation / moisture layer scripts (optional)",
  idxNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
  lg:{dense:"dense canopy",vig:"vigorous",sparse:"sparse",bare:"bare",wet:"wet",ok:"normal",low:"low",dry:"dry"},
@@ -580,6 +582,7 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ tTiles:"Permintaan jubin sebenar:", tBlank:"imej kosong (tiada imej sesuai untuk tetapan ini)",
  setT8:"Skrip lapisan tumbuhan / lembapan (pilihan)",
  idxNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
  lg:{dense:"kanopi tebal",vig:"subur",sparse:"jarang",bare:"tanah kosong",wet:"lembap",ok:"biasa",low:"rendah",dry:"kering"},
@@ -671,24 +674,43 @@ ms:{
  tWmsCors:"Membaca dokumen keupayaan WMS dihalang CORS. Itu tidak bermakna lapisan rosak — kembali ke peta dan lihat.",
  tAvail:"Lapisan dijumpai: "
 }};
-let lang = localStorage.getItem("os.lang"); if(!LANGS.includes(lang)) lang="zh";
+/* Reading localStorage throws outright in some configurations (private mode,
+   blocked cookies, enterprise policy). A throw at top level would kill the
+   whole script, so everything goes through this shim. Worst case the app
+   runs without remembering anything, which beats a blank screen. */
+const LS = (()=>{
+  let ok=true;
+  try{ const k="os.__t"; localStorage.setItem(k,"1"); localStorage.removeItem(k); }
+  catch(_){ ok=false; }
+  const mem={};
+  return {
+    ok,
+    get(k){ try{ return ok ? localStorage.getItem(k) : (k in mem ? mem[k] : null); }
+            catch(_){ return null; } },
+    set(k,v){ try{ if(ok) localStorage.setItem(k,v); else mem[k]=String(v); }catch(_){} },
+    json(k,fallback){ try{ const v=this.get(k); return v==null?fallback:JSON.parse(v); }
+                      catch(_){ return fallback; } }
+  };
+})();
+let lang = LS.get("os.lang"); if(!LANGS.includes(lang)) lang="zh";
 const t = () => T[lang];
 
 /* ===================== state ===================== */
-const savedCfg = JSON.parse(localStorage.getItem("os.cfg")||"{}");
+const savedCfg = LS.json("os.cfg", {}) || {};
 /* An empty string saved on this device must not blank out a built-in value. */
 for(const k of Object.keys(savedCfg)) if(savedCfg[k]==="") delete savedCfg[k];
 const cfg = Object.assign({
   instanceId:"",clientId:"",clientSecret:"",proxy:"",gkey:"",
   layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:60
 }, BUILT_IN, savedCfg);
-let fields = JSON.parse(localStorage.getItem("os.fields")||"[]");
+let fields = LS.json("os.fields", []);
+if(!Array.isArray(fields)) fields=[];
 let activeId = fields[0]?fields[0].id:null;
-let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
-let layerKey = localStorage.getItem("os.layer") || "TRUE";
+let theme = LS.get("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+let layerKey = LS.get("os.layer") || "TRUE";
 let view = "map";
-const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-27-d";
+const saveCfg = ()=>LS.set("os.cfg",JSON.stringify(cfg));
+const BUILD = "2026-09-27-h";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -733,7 +755,7 @@ function layoutDiag(){
           ["#map bottom",mr.bottom.toFixed(1)+" px"],
           ["#map height",mr.height.toFixed(1)+" px"]];
 }
-const saveFields = ()=>localStorage.setItem("os.fields",JSON.stringify(fields));
+const saveFields = ()=>LS.set("os.fields",JSON.stringify(fields));
 
 /* Accept only what we can actually draw: an id, a name, and a ring of
    >=3 finite [lon,lat] pairs. Anything else is rejected whole. */
@@ -941,7 +963,7 @@ async function ensureWeather(){
 }
 
 /* ---- rain radar (RainViewer, free, no key) ---- */
-let radarOn=localStorage.getItem("os.radar")==="1", radarLayer=null, radarMeta=null, radarSeq=0;
+let radarOn=LS.get("os.radar")==="1", radarLayer=null, radarMeta=null, radarSeq=0;
 async function applyRadar(){
   const seq=++radarSeq;
   if(radarLayer){ map.removeLayer(radarLayer); radarLayer=null; }
@@ -1014,23 +1036,31 @@ document.getElementById("sheetX").onclick=closeSheet;
    sheet made every attempt to scroll the content look like a dismiss. */
 (function(){
   const grab=document.getElementById("sheetGrab"); let y0=null, dy=0;
+  /* Pointer Events so this works with a mouse on desktop and with a finger on
+     phones, from one code path. */
   const move=e=>{
     if(y0===null) return;
-    dy=Math.max(0, e.touches[0].clientY - y0);
+    dy=Math.max(0, e.clientY - y0);
     sheetEl.style.transition="none";
     sheetEl.style.transform=`translateY(${dy}px)`;
+    if(dy>0 && e.cancelable) e.preventDefault();
   };
-  const end=()=>{
+  const end=e=>{
     if(y0===null) return;
     sheetEl.style.transition="";
     sheetEl.style.transform="";
+    try{ grab.releasePointerCapture(e.pointerId); }catch(_){}
     if(dy>90) closeSheet();
     y0=null; dy=0;
   };
-  grab.addEventListener("touchstart",e=>{y0=e.touches[0].clientY; dy=0;},{passive:true});
-  grab.addEventListener("touchmove",move,{passive:true});
-  grab.addEventListener("touchend",end);
-  grab.addEventListener("touchcancel",end);
+  grab.addEventListener("pointerdown",e=>{
+    y0=e.clientY; dy=0;
+    try{ grab.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  grab.addEventListener("pointermove",move);
+  grab.addEventListener("pointerup",end);
+  grab.addEventListener("pointercancel",e=>{ y0=null; dy=0;
+    sheetEl.style.transition=""; sheetEl.style.transform=""; });
 })();
 
 /* ===================== helpers ===================== */
@@ -1046,8 +1076,8 @@ function applyTheme(){
   document.querySelector("meta[name=theme-color]").content=theme==="dark"?"#0D1412":"#FFFFFF";
   swapBase();
 }
-$("themeBtn").onclick=()=>{theme=theme==="dark"?"light":"dark";localStorage.setItem("os.theme",theme);applyTheme();if(view!=="map"&&view!=="wx")renderPage();else renderWx();};
-$("langBtn").onclick=()=>{lang=LANGS[(LANGS.indexOf(lang)+1)%LANGS.length];localStorage.setItem("os.lang",lang);
+$("themeBtn").onclick=()=>{theme=theme==="dark"?"light":"dark";LS.set("os.theme", theme);applyTheme();if(view!=="map"&&view!=="wx")renderPage();else renderWx();};
+$("langBtn").onclick=()=>{lang=LANGS[(LANGS.indexOf(lang)+1)%LANGS.length];LS.set("os.lang", lang);
   document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];renderAll();};
 
 function renderTop(){
@@ -1092,7 +1122,7 @@ function renderAll(){
   else if(wxMarker){ map.removeLayer(wxMarker); wxMarker=null; }
 }
 $("btnRadar").onclick=()=>{
-  radarOn=!radarOn; localStorage.setItem("os.radar",radarOn?"1":"0");
+  radarOn=!radarOn; LS.set("os.radar", radarOn?"1":"0");
   mapChromeVisible(); applyRadar();
   setStatus("ok",radarOn?t().wxRadarOn:t().wxRadarOff);
 };
@@ -1141,7 +1171,7 @@ function satControls(){
 }
 function bindSheet(){
   sheetEl.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
-    layerKey=b.dataset.k; localStorage.setItem("os.layer",layerKey);
+    layerKey=b.dataset.k; LS.set("os.layer", layerKey);
     applyLayer(); renderTop();
     /* The sheet covers most of the screen. Re-opening it here meant the user
        picked a layer and then could not see whether anything had changed. */
@@ -1237,7 +1267,7 @@ const LEGENDS = {
 /* The legend is collapsed by default and can be dragged anywhere. Position is
    kept in localStorage so it stays where the user put it. A drag must not also
    fire the toggle, so a tap only counts if the pointer barely moved. */
-let lgOpen = localStorage.getItem("os.lgOpen") === "1";
+let lgOpen = LS.get("os.lgOpen") === "1";
 (function(){
   const box=document.getElementById("mapLegend");
   const btn=document.getElementById("lgToggle");
@@ -1251,43 +1281,43 @@ let lgOpen = localStorage.getItem("os.lgOpen") === "1";
   function place(x,y){
     const [cx,cy]=clampInto(x,y);
     box.style.left=cx+"px"; box.style.top=cy+"px"; box.style.right="auto";
-    localStorage.setItem("os.lgPos", JSON.stringify([cx,cy]));
+    LS.set("os.lgPos", JSON.stringify([cx,cy]));
   }
   window.lgRestore=function(){
     let p=null;
-    try{ p=JSON.parse(localStorage.getItem("os.lgPos")||"null"); }catch(_){ p=null; }
+    try{ p=JSON.parse(LS.get("os.lgPos")||"null"); }catch(_){ p=null; }
     if(Array.isArray(p) && p.length===2 && p.every(n=>typeof n==="number" && isFinite(n))) place(p[0],p[1]);
   };
 
+  /* Pointer Events only. Binding touch* and mouse* together made iOS run the
+     toggle twice: once on touchend, again on the synthetic mouse event. */
   const down=e=>{
-    const t0=e.touches?e.touches[0]:e;
     const r=box.getBoundingClientRect();
-    sx=t0.clientX; sy=t0.clientY; ox=r.left; oy=r.top; moved=0; dragging=true;
+    sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top; moved=0; dragging=true;
+    try{ btn.setPointerCapture(e.pointerId); }catch(_){}
   };
   const move=e=>{
     if(!dragging) return;
-    const t0=e.touches?e.touches[0]:e;
-    const dx=t0.clientX-sx, dy=t0.clientY-sy;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
     moved=Math.max(moved, Math.abs(dx)+Math.abs(dy));
     if(moved>6){ if(e.cancelable) e.preventDefault(); place(ox+dx, oy+dy); }
   };
-  const up=()=>{
+  const up=e=>{
     if(!dragging) return;
     dragging=false;
-    if(moved<=6){                      // a tap, not a drag
+    try{ btn.releasePointerCapture(e.pointerId); }catch(_){}
+    if(moved<=6){
       lgOpen=!lgOpen;
-      localStorage.setItem("os.lgOpen", lgOpen?"1":"0");
+      LS.set("os.lgOpen", lgOpen?"1":"0");
       box.classList.toggle("open", lgOpen);
-      lgRestore();                     // reflow may push it off screen
+      requestAnimationFrame(()=>lgRestore());   // size changed, re-clamp
     }
   };
-  btn.addEventListener("touchstart",down,{passive:true});
-  btn.addEventListener("touchmove",move,{passive:false});
-  btn.addEventListener("touchend",up);
-  btn.addEventListener("touchcancel",()=>{dragging=false;});
-  btn.addEventListener("mousedown",down);
-  addEventListener("mousemove",move);
-  addEventListener("mouseup",up);
+  btn.addEventListener("pointerdown",down);
+  btn.addEventListener("pointermove",move);
+  btn.addEventListener("pointerup",up);
+  btn.addEventListener("pointercancel",()=>{dragging=false;});
+  btn.addEventListener("click",e=>e.preventDefault());
   addEventListener("resize",()=>lgRestore());
 })();
 
@@ -1650,11 +1680,11 @@ function wxDetailSheet(){
     <button class="btn wide alt" id="closeSrc" style="margin-top:6px">${t().close}</button>`);
   bindSheet();
 }
-const IDX_SCRIPT = (name, expr, stops) => `//VERSION=3
+const IDX_SCRIPT = (name, bands, expr, stops) => `//VERSION=3
 // ${name} with SCL cloud masking. Colours match the legend in the app.
 // Paste into the matching layer in the CDSE Configuration Utility.
 function setup(){return{
-  input:[{bands:["B04","B08","B11","SCL","dataMask"]}],
+  input:[{bands:[${bands.map(b=>JSON.stringify(b)).join(",")}]}],
   output:{bands:4}
 };}
 const ramp = [
@@ -1671,10 +1701,12 @@ function evaluatePixel(s){
   return [c[0], c[1], c[2], 1];
 }`;
 
-const NDVI_SCRIPT = IDX_SCRIPT("NDVI", "(s.B08 - s.B04) / (s.B08 + s.B04)",
+const NDVI_SCRIPT = IDX_SCRIPT("NDVI", ["B04","B08","SCL","dataMask"],
+  "(s.B08 - s.B04) / (s.B08 + s.B04)",
   [[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]]);
 
-const NDMI_SCRIPT = IDX_SCRIPT("NDMI", "(s.B08 - s.B11) / (s.B08 + s.B11)",
+const NDMI_SCRIPT = IDX_SCRIPT("NDMI", ["B08","B11","SCL","dataMask"],
+  "(s.B08 - s.B11) / (s.B08 + s.B11)",
   [[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]]);
 
 const PROD_SCRIPT=`//VERSION=3
@@ -1749,6 +1781,39 @@ function pgSet(){
   <button class="btn wide" id="saveCfg">${t().save}</button>
   <button class="btn wide alt" id="testConn" style="margin-top:10px">${t().test}</button>
   <div id="testOut" style="margin-top:12px"></div>`;
+}
+
+
+/* Ask the server for one real tile per layer and report what came back.
+   Leaflet's tileerror only says "failed"; Sentinel Hub puts the actual reason
+   (bad script, unknown layer, quota) in the response body, so read it. */
+async function probeLayer(name){
+  if(!wmsUrl()) return {name, ok:false, why:"no instance id"};
+  const c = map.getCenter(), d = 0.01;
+  const q = new URLSearchParams({
+    service:"WMS", request:"GetMap", version:"1.3.0", layers:name,
+    styles:"", format:"image/png", transparent:"true",
+    crs:"CRS:84", bbox:[c.lng-d, c.lat-d, c.lng+d, c.lat+d].join(","),
+    width:"64", height:"64", showlogo:"false"
+  });
+  if(name !== cfg.layerProd){
+    const to = satDate;
+    const from = new Date(new Date(to).getTime()-satWin*864e5).toISOString().slice(0,10);
+    q.set("time", from+"/"+to); q.set("maxcc", String(cfg.maxcc));
+  }
+  let r;
+  const t0 = Date.now();
+  try{ r = await fetch(wmsUrl()+"?"+q.toString()); }
+  catch(e){ return {name, ok:false, why:"network: "+(e.message||e)}; }
+  const ms = Date.now()-t0;
+  const ct = r.headers.get("content-type")||"";
+  if(r.ok && ct.indexOf("image")===0){
+    const b = await r.blob();
+    /* A valid but empty PNG is the "no clear scene" case, not a failure. */
+    return {name, ok:true, ms, bytes:b.size, blank:b.size<900};
+  }
+  const body = (await r.text()).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  return {name, ok:false, ms, why:`HTTP ${r.status} · ${body.slice(0,220)}`};
 }
 
 /* ===================== page bindings ===================== */
@@ -1856,6 +1921,21 @@ function bindPage(){
       try{await getToken();L.push("✅ "+t().tOAuth+" — "+t().tGot);}
       catch(e){L.push("❌ "+t().tOAuth+" — "+e.message);}
     } else L.push("— "+t().tSkipOAuth);
+
+    if(cfg.instanceId){
+      L.push("");
+      L.push(t().tTiles);
+      const want=[["TRUE",cfg.layerTrue],["NDVI",cfg.layerNdvi],
+                  ["MOIST",cfg.layerMoist],["PROD",cfg.layerProd]];
+      for(const [k,nm] of want){
+        if(!nm) continue;
+        const p=await probeLayer(nm);
+        if(p.ok && !p.blank) L.push(`　✅ ${k} (${nm}) — ${p.bytes} B · ${p.ms} ms`);
+        else if(p.ok)        L.push(`　⚠️ ${k} (${nm}) — ${t().tBlank} · ${p.ms} ms`);
+        else                 L.push(`　❌ ${k} (${nm}) — ${p.why}`);
+      }
+    }
+
     out.innerHTML=`<div class="card"><h3>${t().testTitle}</h3>
       <p class="sub" style="white-space:pre-line;margin-top:10px">${esc(L.join("\n"))}</p></div>`;
   };
