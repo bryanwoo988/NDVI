@@ -627,7 +627,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-t";
+const BUILD = "2026-09-26-u";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -1054,7 +1054,10 @@ function satControls(){
 function bindSheet(){
   sheetEl.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
     layerKey=b.dataset.k; localStorage.setItem("os.layer",layerKey);
-    applyLayer(); renderTop(); openLayerSheet();
+    applyLayer(); renderTop();
+    /* The sheet covers most of the screen. Re-opening it here meant the user
+       picked a layer and then could not see whether anything had changed. */
+    closeSheet();
   });
   if($("satDate")) $("satDate").onchange=e=>{satDate=e.target.value;applyLayer();};
   if($("satWin"))  $("satWin").onchange =e=>{satWin=+e.target.value;applyLayer();};
