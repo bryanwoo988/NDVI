@@ -318,8 +318,8 @@ const APP_NAME = "OneSoil";
    only the Worker's URL, which is safe to publish.
    ============================================================ */
 const BUILT_IN = {
-  instanceId : "",                 // Sentinel Hub Instance ID
-  proxy      : "",                 // https://cdse-token.<you>.workers.dev
+  instanceId : "c31b98a4-0a23-45f8-ae81-32f02901934a",
+  proxy      : "https://cdse-token.hockhynnwoo.workers.dev",
   gkey       : "",                 // Google Places key, referrer-restricted
   layerTrue  : "TRUE-COLOR",
   layerNdvi  : "NDVI",
@@ -627,7 +627,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-o";
+const BUILD = "2026-09-26-q";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
