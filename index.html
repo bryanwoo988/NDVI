@@ -619,7 +619,7 @@ const savedCfg = JSON.parse(localStorage.getItem("os.cfg")||"{}");
 for(const k of Object.keys(savedCfg)) if(savedCfg[k]==="") delete savedCfg[k];
 const cfg = Object.assign({
   instanceId:"",clientId:"",clientSecret:"",proxy:"",gkey:"",
-  layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:30
+  layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:60
 }, BUILT_IN, savedCfg);
 let fields = JSON.parse(localStorage.getItem("os.fields")||"[]");
 let activeId = fields[0]?fields[0].id:null;
@@ -627,7 +627,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-r";
+const BUILD = "2026-09-26-t";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -716,19 +716,27 @@ function swapBase(){
 let wmsLayer=null, fieldLayers=[], draftLayer=null, draftDots=[], drawing=false, draftPts=[];
 const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${cfg.instanceId}`:null;
 
-let satDate = new Date().toISOString().slice(0,10), satWin = 12;
+let satDate = new Date().toISOString().slice(0,10), satWin = 30;
 function applyLayer(){
   swapBase();
   if(wmsLayer){map.removeLayer(wmsLayer); wmsLayer=null;}
   const m = {NDVI:cfg.layerNdvi,MOIST:cfg.layerMoist,PROD:cfg.layerProd,TRUE:cfg.layerTrue,OFF:"",STREET:""};
   const name = m[layerKey]||"";
   if(!name || !wmsUrl()) return;
-  const from = new Date(new Date(satDate).getTime()-satWin*864e5).toISOString().slice(0,10);
-  wmsLayer = L.tileLayer.wms(wmsUrl(),{
-    layers:name,format:"image/png",transparent:true,version:"1.3.0",
-    maxcc:cfg.maxcc,time:`${from}/${satDate}`,opacity:.92,showlogo:false,
+  const opts = {
+    layers:name, format:"image/png", transparent:true, version:"1.3.0",
+    opacity:.92, showlogo:false,
     attribution:"Sentinel-2 © Copernicus · Sentinel Hub"
-  }).addTo(map);
+  };
+  /* Productivity averages three years, and that range plus its cloud filter
+     live in the CDSE layer itself. Sending time/maxcc here would override
+     them and silently reduce it to a single recent scene. */
+  if(layerKey !== "PROD"){
+    const from = new Date(new Date(satDate).getTime()-satWin*864e5).toISOString().slice(0,10);
+    opts.maxcc = cfg.maxcc;
+    opts.time  = `${from}/${satDate}`;
+  }
+  wmsLayer = L.tileLayer.wms(wmsUrl(), opts).addTo(map);
   wmsLayer.on("tileerror",()=>setStatus("bad",t().layerFail));
   wmsLayer.on("load",()=>setStatus("ok",t().loaded));
   setStatus("busy",t().loading);
@@ -1504,11 +1512,14 @@ function bindPage(){
     renderPage();
   };
   if($("saveCfg")) $("saveCfg").onclick=()=>{
-    cfg.instanceId=$("cInst").value.trim(); cfg.layerNdvi=$("cLn").value.trim();
-    cfg.layerMoist=$("cLm").value.trim(); cfg.layerProd=$("cLp").value.trim();
-    cfg.layerTrue=$("cLt").value.trim(); cfg.clientId=$("cCid").value.trim();
-    cfg.clientSecret=$("cSec").value.trim(); cfg.proxy=$("cPrx").value.trim();
-    cfg.gkey=$("cGk").value.trim();
+    /* Clearing a field means "use the built-in value", not "make it blank".
+       Without this, emptying a box left cfg blank until the next app start. */
+    const take = (id, key) => { const v=$(id).value.trim(); cfg[key] = v || BUILT_IN[key] || ""; };
+    take("cInst","instanceId"); take("cLn","layerNdvi");
+    take("cLm","layerMoist");   take("cLp","layerProd");
+    take("cLt","layerTrue");    take("cPrx","proxy");
+    take("cGk","gkey");
+    cfg.clientId=$("cCid").value.trim(); cfg.clientSecret=$("cSec").value.trim();
     token=null;tokenExp=0; saveCfg(); applyLayer();
     setStatus("ok",t().cfgSaved);
     $("testOut").innerHTML=`<div class="msg info">${t().cfgSaved}</div>`;
