@@ -233,28 +233,6 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .hcell.sel .bar{background:rgba(16,26,23,.12)}
 .hcell .bar i{width:100%;background:#4DA3FF;border-radius:9px;min-height:2px}
 .hcell small{font-size:10.5px;opacity:.78;font-weight:600}
-#mapLegend{position:fixed;left:12px;top:44%;z-index:617;display:none;
-  background:var(--chrome);color:var(--chrome-ink);border-radius:18px;
-  box-shadow:var(--sh-s);backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);max-width:136px;touch-action:none}
-#mapLegend.on{display:block}
-#lgToggle{display:flex;align-items:center;gap:7px;width:100%;padding:8px 11px;
-  color:inherit;border-radius:18px}
-#lgChip{width:13px;height:13px;border-radius:4px;flex:0 0 auto;
-  box-shadow:0 0 0 1px rgba(255,255,255,.35) inset}
-#lgToggle b{font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
-#lgPanel{display:none;padding:0 12px 10px}
-#mapLegend.open #lgPanel{display:block}
-#mapLegend .lgTitle{font-size:12px;font-weight:800;letter-spacing:-.01em;margin:2px 0 8px}
-#mapLegend .lgIdx{display:block;font-style:normal;font-size:10px;font-weight:700;
-  opacity:.62;letter-spacing:.04em;margin-top:1px}
-#mapLegend .lgBody{display:flex;gap:8px}
-#mapLegend .lgBar{width:14px;border-radius:7px;flex:0 0 auto}
-#mapLegend .lgTicks{display:flex;flex-direction:column;justify-content:space-between;
-  font-size:10.5px;line-height:1.15;opacity:.95}
-#mapLegend .lgTicks b{font-weight:700;font-variant-numeric:tabular-nums}
-#mapLegend .lgTicks i{font-style:normal;opacity:.72;display:block;font-size:9.5px}
-#mapLegend .lgFoot{margin-top:9px;font-size:9.5px;line-height:1.3;opacity:.7}
 #wxLegend{position:fixed;left:14px;top:46%;transform:translateY(-50%);z-index:616;
   width:13px;height:180px;border-radius:7px;display:none;box-shadow:var(--sh-s);
   background:linear-gradient(to top,#9AD8FF,#3D9BFF,#1E4FD6,#8A2BD6,#D8306B)}
@@ -316,15 +294,6 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 </div>
 
 <div id="wxLegend"><span style="top:-6px" id="lgHi"></span><span style="bottom:-6px" id="lgLo"></span></div>
-<div id="mapLegend">
-  <button id="lgToggle" aria-label="legend"><span id="lgChip"></span><b id="lgIdxS"></b></button>
-  <div id="lgPanel">
-    <div class="lgTitle" id="lgTitle"></div>
-    <div class="lgBody"><div class="lgBar" id="lgBar"></div>
-      <div class="lgTicks" id="lgTicks"></div></div>
-    <div class="lgFoot" id="lgFoot"></div>
-  </div>
-</div>
 <div id="wxwrap">
   <button id="wxCard"></button>
   <div id="wxTrack"></div>
@@ -396,11 +365,10 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ rate429:"被限流（每分钟请求数超过上限）。等一分钟再试，别连续切图层。",
  tTiles:"实际取一张瓦片：", tBlank:"回传空白图（该条件下没有可用影像）",
  setT8:"长势 / 水分图层脚本（选用）",
  idxNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
- lg:{dense:"树冠浓密",vig:"长势佳",sparse:"稀疏",bare:"裸露",wet:"含水高",ok:"正常",low:"偏低",dry:"干"},
- lgExact:"色阶与产能脚本一致", lgApprox:"色阶依你 CDSE 配置里的脚本而定",
  wxErr:"这个位置没有逐小时预报资料",
  seeMap:"看地图",
  secShow:"显示 / 隐藏 Secret",
@@ -489,11 +457,10 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ rate429:"Rate limited (too many requests this minute). Wait a minute and avoid switching layers rapidly.",
  tTiles:"Real tile request:", tBlank:"blank image returned (no usable scene for these settings)",
  setT8:"Vegetation / moisture layer scripts (optional)",
  idxNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
- lg:{dense:"dense canopy",vig:"vigorous",sparse:"sparse",bare:"bare",wet:"wet",ok:"normal",low:"low",dry:"dry"},
- lgExact:"matches the productivity script", lgApprox:"depends on the script in your CDSE layer",
  wxErr:"No hourly forecast for this location",
  seeMap:"See the map",
  secShow:"Show / hide secret",
@@ -582,14 +549,13 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
- tTiles:"Permintaan jubin sebenar:", tBlank:"imej kosong (tiada imej sesuai untuk tetapan ini)",
- setT8:"Skrip lapisan tumbuhan / lembapan (pilihan)",
- idxNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
- lg:{dense:"kanopi tebal",vig:"subur",sparse:"jarang",bare:"tanah kosong",wet:"lembap",ok:"biasa",low:"rendah",dry:"kering"},
- lgExact:"sepadan dengan skrip produktiviti", lgApprox:"bergantung pada skrip dalam konfigurasi CDSE anda",
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
  seeMap:"Lihat peta",
  secShow:"Papar / sembunyi secret",
+ rate429:"Dihadkan kadar (terlalu banyak permintaan seminit). Tunggu seminit sebelum cuba lagi.",
+ tTiles:"Permintaan jubin sebenar:", tBlank:"imej kosong (tiada imej sesuai untuk tetapan ini)",
+ setT8:"Skrip lapisan tumbuhan / lembapan (pilihan)",
+ idxNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
  tMissing:"Tiada dalam konfigurasi: ", tAllMatch:"Keempat-empat nama lapisan sepadan",
  setT7:"Sudah disediakan", preNote:"Lapisan, cuaca dan carian telah disediakan oleh pembangun. Tiada apa perlu diisi.",
  advShow:"Guna kunci sendiri (lanjutan)", advHide:"Sembunyikan tetapan lanjutan",
@@ -710,7 +676,7 @@ let theme = LS.get("os.theme") || (matchMedia("(prefers-color-scheme: dark)").ma
 let layerKey = LS.get("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>LS.set("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-27-h";
+const BUILD = "2026-09-27-k";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -802,7 +768,6 @@ const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${
 let satDate = new Date().toISOString().slice(0,10), satWin = 30;
 function applyLayer(){
   swapBase();
-  renderLegend();
   if(wmsLayer){map.removeLayer(wmsLayer); wmsLayer=null;}
   const m = {NDVI:cfg.layerNdvi,MOIST:cfg.layerMoist,PROD:cfg.layerProd,TRUE:cfg.layerTrue,OFF:"",STREET:""};
   const name = m[layerKey]||"";
@@ -820,8 +785,26 @@ function applyLayer(){
     opts.maxcc = cfg.maxcc;
     opts.time  = `${from}/${satDate}`;
   }
+  /* Sentinel Hub limits requests per minute as well as PU per minute. One
+     512 px tile costs the same PU as the four 256 px tiles it replaces, but
+     counts as a single request, so this cuts request pressure by ~4x.
+     updateWhenIdle/updateWhenZooming stop mid-gesture bursts. */
+  opts.tileSize = 512;
+  opts.updateWhenIdle = true;
+  opts.updateWhenZooming = false;
+  opts.keepBuffer = 0;
   wmsLayer = L.tileLayer.wms(wmsUrl(), opts).addTo(map);
-  wmsLayer.on("tileerror",()=>setStatus("bad",t().layerFail));
+  let tileErrs=0;
+  wmsLayer.on("tileerror",()=>{
+    /* Leaflet gives no status code here, so probe once to find out whether
+       this is throttling or a real failure, and only once per layer load. */
+    if(tileErrs++) return;
+    setStatus("bad", t().layerFail);
+    probeLayer(name).then(r=>{
+      if(!r.ok && /HTTP 429/.test(r.why||"")) setStatus("bad", t().rate429);
+      else if(!r.ok && r.why) setStatus("bad", r.why.slice(0,120));
+    }).catch(()=>{});
+  });
   wmsLayer.on("load",()=>setStatus("ok",t().loaded));
   setStatus("busy",t().loading);
 }
@@ -1107,7 +1090,6 @@ function mapChromeVisible(){
   $("btnRadar").classList.toggle("on",radarOn);
   $("wxwrap").classList.toggle("on",w);
   $("wxLegend").style.display=(w&&radarOn)?"block":"none";
-  renderLegend();
   $("lgHi").textContent=t().lgHeavy; $("lgLo").textContent=t().lgLight;
 }
 function renderAll(){
@@ -1234,126 +1216,6 @@ function wmsLayerNames(xml){
   return out;
 }
 
-
-/* ===================== map legend =====================
-   PROD is exact: the five classes below are the same breaks and colours as
-   the productivity evalscript in Settings, so the legend cannot drift from
-   the picture. NDVI and NDMI are drawn by whatever evalscript sits in the
-   CDSE configuration, so these ramps match the scripts offered in Settings;
-   if the configuration uses a different ramp, the colours will not agree. */
-const LEGENDS = {
-  NDVI: {
-    index:"NDVI",
-    exact:false,
-    stops:[[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]],
-    ticks:[[1.0,"1.0","dense"],[0.6,"0.6","vig"],[0.2,"0.2","sparse"],[0.0,"0.0","bare"]]
-  },
-  MOIST: {
-    index:"NDMI",
-    exact:false,
-    stops:[[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]],
-    ticks:[[1.0,"1.0","wet"],[0.3,"0.3","ok"],[0.0,"0.0","low"],[-0.5,"-0.5","dry"]]
-  },
-  PROD: {
-    index:"NDVI · 3-year mean",
-    exact:true,
-    classes:[["#A1522E","< 0.30","low"],["#D4A62B","0.30 – 0.45",""],
-             ["#99CC33","0.45 – 0.60",""],["#3DB34A","0.60 – 0.72",""],
-             ["#0A5C29","≥ 0.72","high"]]
-  }
-};
-
-
-/* The legend is collapsed by default and can be dragged anywhere. Position is
-   kept in localStorage so it stays where the user put it. A drag must not also
-   fire the toggle, so a tap only counts if the pointer barely moved. */
-let lgOpen = LS.get("os.lgOpen") === "1";
-(function(){
-  const box=document.getElementById("mapLegend");
-  const btn=document.getElementById("lgToggle");
-  let sx=0, sy=0, ox=0, oy=0, moved=0, dragging=false;
-
-  function clampInto(x,y){
-    const r=box.getBoundingClientRect(), m=8;
-    return [Math.min(Math.max(m,x), Math.max(m, innerWidth  - r.width  - m)),
-            Math.min(Math.max(m,y), Math.max(m, innerHeight - r.height - m))];
-  }
-  function place(x,y){
-    const [cx,cy]=clampInto(x,y);
-    box.style.left=cx+"px"; box.style.top=cy+"px"; box.style.right="auto";
-    LS.set("os.lgPos", JSON.stringify([cx,cy]));
-  }
-  window.lgRestore=function(){
-    let p=null;
-    try{ p=JSON.parse(LS.get("os.lgPos")||"null"); }catch(_){ p=null; }
-    if(Array.isArray(p) && p.length===2 && p.every(n=>typeof n==="number" && isFinite(n))) place(p[0],p[1]);
-  };
-
-  /* Pointer Events only. Binding touch* and mouse* together made iOS run the
-     toggle twice: once on touchend, again on the synthetic mouse event. */
-  const down=e=>{
-    const r=box.getBoundingClientRect();
-    sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top; moved=0; dragging=true;
-    try{ btn.setPointerCapture(e.pointerId); }catch(_){}
-  };
-  const move=e=>{
-    if(!dragging) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    moved=Math.max(moved, Math.abs(dx)+Math.abs(dy));
-    if(moved>6){ if(e.cancelable) e.preventDefault(); place(ox+dx, oy+dy); }
-  };
-  const up=e=>{
-    if(!dragging) return;
-    dragging=false;
-    try{ btn.releasePointerCapture(e.pointerId); }catch(_){}
-    if(moved<=6){
-      lgOpen=!lgOpen;
-      LS.set("os.lgOpen", lgOpen?"1":"0");
-      box.classList.toggle("open", lgOpen);
-      requestAnimationFrame(()=>lgRestore());   // size changed, re-clamp
-    }
-  };
-  btn.addEventListener("pointerdown",down);
-  btn.addEventListener("pointermove",move);
-  btn.addEventListener("pointerup",up);
-  btn.addEventListener("pointercancel",()=>{dragging=false;});
-  btn.addEventListener("click",e=>e.preventDefault());
-  addEventListener("resize",()=>lgRestore());
-})();
-
-function renderLegend(){
-  const box=$("mapLegend"), def=LEGENDS[layerKey];
-  if(!def || view!=="map"){ box.classList.remove("on"); return; }
-  box.classList.add("on");
-  $("lgTitle").innerHTML = `${esc(t().lyr[layerKey])}<i class="lgIdx">${def.index}</i>`;
-  $("lgIdxS").textContent = def.index.split(" ")[0];
-  $("lgChip").style.background = def.classes
-    ? `linear-gradient(to top,${def.classes.map(c=>c[0]).join(",")})`
-    : `linear-gradient(to top,${def.stops.map(x=>x[1]).join(",")})`;
-  box.classList.toggle("open", lgOpen);
-
-  if(def.classes){
-    /* discrete: one block per class, so the legend reads the same way the
-       map does — five flat colours, not a gradient */
-    const n=def.classes.length;
-    $("lgBar").style.background =
-      "linear-gradient(to top," + def.classes.map((c,i)=>
-        `${c[0]} ${(i/n*100).toFixed(1)}%,${c[0]} ${((i+1)/n*100).toFixed(1)}%`).join(",") + ")";
-    $("lgBar").style.height = (n*26)+"px";
-    $("lgTicks").innerHTML = def.classes.slice().reverse()
-      .map(c=>`<span style="height:26px;display:flex;align-items:center"><b>${c[1]}</b></span>`).join("");
-  } else {
-    const lo=def.stops[0][0], hi=def.stops[def.stops.length-1][0], span=hi-lo;
-    $("lgBar").style.background =
-      "linear-gradient(to top," + def.stops.map(([v,c])=>
-        `${c} ${(((v-lo)/span)*100).toFixed(1)}%`).join(",") + ")";
-    $("lgBar").style.height = "150px";
-    $("lgTicks").innerHTML = def.ticks
-      .map(([,lab,sub])=>`<span><b>${lab}</b>${sub?`<i>${t().lg[sub]||sub}</i>`:""}</span>`).join("");
-  }
-  $("lgFoot").textContent = def.exact ? t().lgExact : t().lgApprox;
-  if(window.lgRestore) lgRestore();
-}
 
 /* ===================== drawing ===================== */
 const DRAW_ICON = `<svg class="i" viewBox="0 0 24 24"><path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/></svg>`;
@@ -1813,7 +1675,10 @@ async function probeLayer(name){
     return {name, ok:true, ms, bytes:b.size, blank:b.size<900};
   }
   const body = (await r.text()).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  return {name, ok:false, ms, why:`HTTP ${r.status} · ${body.slice(0,220)}`};
+  const ra = r.headers.get("retry-after");
+  const extra = r.status===429 ? ` · retry-after ${ra||"?"}` : "";
+  return {name, ok:false, ms, status:r.status,
+          why:`HTTP ${r.status}${extra} · ${body.slice(0,200)}`};
 }
 
 /* ===================== page bindings ===================== */
@@ -1927,8 +1792,13 @@ function bindPage(){
       L.push(t().tTiles);
       const want=[["TRUE",cfg.layerTrue],["NDVI",cfg.layerNdvi],
                   ["MOIST",cfg.layerMoist],["PROD",cfg.layerProd]];
+      let first=true;
       for(const [k,nm] of want){
         if(!nm) continue;
+        /* Space the probes out; four at once is itself enough to trip the
+           per-minute limit on a free account. */
+        if(!first) await new Promise(r=>setTimeout(r,1300));
+        first=false;
         const p=await probeLayer(nm);
         if(p.ok && !p.blank) L.push(`　✅ ${k} (${nm}) — ${p.bytes} B · ${p.ms} ms`);
         else if(p.ok)        L.push(`　⚠️ ${k} (${nm}) — ${t().tBlank} · ${p.ms} ms`);
