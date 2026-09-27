@@ -143,12 +143,20 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
   opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #sheet{position:fixed;z-index:710;left:0;right:0;bottom:0;background:var(--bg);
+  -webkit-overflow-scrolling:touch;
   border-radius:26px 26px 0 0;box-shadow:var(--sh);max-height:86vh;overflow-y:auto;
   padding:10px 20px calc(26px + var(--sb));transform:translateY(102%);
   transition:transform .28s cubic-bezier(.2,.85,.25,1)}
 #sheet.on{transform:translateY(0)}
-#sheet .bar{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 16px}
-#sheet h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0 0 16px}
+#sheetGrab{padding:6px 0 10px;margin:-10px 0 6px;cursor:grab;touch-action:none}
+#sheet .bar{width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+/* fixed, not absolute: #sheet scrolls, and its transform makes it the
+   containing block, so this pins to the card and never scrolls away. */
+#sheetX{position:fixed;top:14px;right:16px;width:40px;height:40px;border-radius:50%;
+  display:grid;place-items:center;background:var(--surf);color:var(--text);
+  border:1px solid var(--line);z-index:2}
+#sheetX svg.i{width:20px}
+#sheet h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0 0 16px;padding-right:52px}
 
 /* layer tiles */
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -301,7 +309,11 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 <nav id="nav"></nav>
 
 <div id="scrim"></div>
-<div id="sheet"><div class="bar"></div><div id="sheetBody"></div></div>
+<div id="sheet">
+  <div id="sheetGrab"><div class="bar"></div></div>
+  <button id="sheetX" aria-label="close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="sheetBody"></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
@@ -353,6 +365,8 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
+ wxErr:"这个位置没有逐小时预报资料",
+ seeMap:"看地图",
  secShow:"显示 / 隐藏 Secret",
  tMissing:"配置里找不到这几个图层名：", tAllMatch:"四个图层名都对得上",
  setT7:"已经设定好了", preNote:"图层、天气、搜索都已经由开发者设好，你不用填任何东西，直接用就行。",
@@ -439,6 +453,8 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
+ wxErr:"No hourly forecast for this location",
+ seeMap:"See the map",
  secShow:"Show / hide secret",
  tMissing:"Not present in the configuration: ", tAllMatch:"All four layer names match",
  setT7:"Already set up", preNote:"Layers, weather and search are configured by the developer. Nothing to fill in — just use the app.",
@@ -525,6 +541,8 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
+ wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
+ seeMap:"Lihat peta",
  secShow:"Papar / sembunyi secret",
  tMissing:"Tiada dalam konfigurasi: ", tAllMatch:"Keempat-empat nama lapisan sepadan",
  setT7:"Sudah disediakan", preNote:"Lapisan, cuaca dan carian telah disediakan oleh pembangun. Tiada apa perlu diisi.",
@@ -627,7 +645,7 @@ let theme = localStorage.getItem("os.theme") || (matchMedia("(prefers-color-sche
 let layerKey = localStorage.getItem("os.layer") || "TRUE";
 let view = "map";
 const saveCfg = ()=>localStorage.setItem("os.cfg",JSON.stringify(cfg));
-const BUILD = "2026-09-26-u";
+const BUILD = "2026-09-26-y";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -946,6 +964,30 @@ const scrim=document.getElementById("scrim"), sheetEl=document.getElementById("s
 function openSheet(html){ document.getElementById("sheetBody").innerHTML=html; scrim.classList.add("on"); sheetEl.classList.add("on"); }
 function closeSheet(){ scrim.classList.remove("on"); sheetEl.classList.remove("on"); }
 scrim.onclick=closeSheet;
+document.getElementById("sheetX").onclick=closeSheet;
+
+/* Drag to dismiss. Bound to the grab strip alone: binding it to the whole
+   sheet made every attempt to scroll the content look like a dismiss. */
+(function(){
+  const grab=document.getElementById("sheetGrab"); let y0=null, dy=0;
+  const move=e=>{
+    if(y0===null) return;
+    dy=Math.max(0, e.touches[0].clientY - y0);
+    sheetEl.style.transition="none";
+    sheetEl.style.transform=`translateY(${dy}px)`;
+  };
+  const end=()=>{
+    if(y0===null) return;
+    sheetEl.style.transition="";
+    sheetEl.style.transform="";
+    if(dy>90) closeSheet();
+    y0=null; dy=0;
+  };
+  grab.addEventListener("touchstart",e=>{y0=e.touches[0].clientY; dy=0;},{passive:true});
+  grab.addEventListener("touchmove",move,{passive:true});
+  grab.addEventListener("touchend",end);
+  grab.addEventListener("touchcancel",end);
+})();
 
 /* ===================== helpers ===================== */
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1042,14 +1084,15 @@ function satControls(){
       </select>
     </div>
     <p class="sub">${t().satWin}</p>
-    <label class="f">${t().maxcc} — ${cfg.maxcc}%</label>
+    <label class="f">${t().maxcc} — <span id="satCCLab">${cfg.maxcc}%</span></label>
     <input type="range" id="satCC" min="5" max="90" step="5" value="${cfg.maxcc}">
     ${(layerKey==="NDVI"||layerKey==="PROD")?`
       <div class="ramp"><i style="background:#A0522D"></i><i style="background:#D4A72C"></i>
       <i style="background:#9ACD32"></i><i style="background:#3CB44B"></i><i style="background:#0B5B2A"></i></div>
       <div class="ramp-lab"><span>${t().rampLo}</span><span>${t().rampHi}</span></div>`:""}
     <p class="sub" style="margin-top:12px">${t().satNote}</p>
-    <p class="src">${t().satSrc}</p></div>`;
+    <p class="src">${t().satSrc}</p></div>
+    <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`;
 }
 function bindSheet(){
   sheetEl.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
@@ -1061,8 +1104,15 @@ function bindSheet(){
   });
   if($("satDate")) $("satDate").onchange=e=>{satDate=e.target.value;applyLayer();};
   if($("satWin"))  $("satWin").onchange =e=>{satWin=+e.target.value;applyLayer();};
-  if($("satCC"))   $("satCC").onchange  =e=>{cfg.maxcc=+e.target.value;saveCfg();applyLayer();openLayerSheet();};
+  /* Rebuilding the sheet here reopened it on every drag, so it could never be
+     dismissed. Update the label in place instead and leave the sheet alone. */
+  if($("satCC")){
+    const lab = $("satCCLab");
+    $("satCC").oninput  = e=>{ if(lab) lab.textContent = e.target.value+"%"; };
+    $("satCC").onchange = e=>{ cfg.maxcc=+e.target.value; saveCfg(); applyLayer(); };
+  }
   if($("closeSrc")) $("closeSrc").onclick=closeSheet;
+  if($("sheetDone")) $("sheetDone").onclick=closeSheet;
 }
 $("layerPill").onclick=openLayerSheet;
 
@@ -1356,9 +1406,20 @@ function renderWx(){
     $("wxTrack").innerHTML=""; return; }
   if(!wx.data) return;
 
-  const h=wx.data.j.hourly, u=wx.data.j.hourly_units, i=Math.min(wxHour,h.time.length-1);
+  const hRaw=wx.data.j.hourly||{}, u=wx.data.j.hourly_units||{};
+  /* Open-Meteo omits a field entirely when it has nothing for that location.
+     Indexing a missing array threw and blanked the whole weather page. */
+  const col=n=>Array.isArray(hRaw[n])?hRaw[n]:[];
+  const h={time:col("time"),precipitation:col("precipitation"),
+           precipitation_probability:col("precipitation_probability"),
+           temperature_2m:col("temperature_2m"),wind_speed_10m:col("wind_speed_10m"),
+           wind_direction_10m:col("wind_direction_10m"),weather_code:col("weather_code"),
+           relative_humidity_2m:col("relative_humidity_2m")};
+  if(!h.time.length){ $("wxCard").innerHTML=`<span class="col"><span class="lab">${t().wxErr}</span></span>`;
+    $("wxTrack").innerHTML=""; return; }
+  const i=Math.min(Math.max(0,wxHour),h.time.length-1);
   const nz=v=>(v==null||isNaN(v))?0:v;
-  const mm=nz(h.precipitation[i]), pp=h.precipitation_probability[i], tp=nz(h.temperature_2m[i]);
+  const mm=nz(h.precipitation[i]), pp=h.precipitation_probability[i]??null, tp=nz(h.temperature_2m[i]);
   const ws=nz(h.wind_speed_10m[i]), wd=nz(h.wind_direction_10m[i]), code=h.weather_code[i]??0;
   const nowI=nowHourIndex(h);
 
