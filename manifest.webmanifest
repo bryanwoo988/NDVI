@@ -1,6 +1,6 @@
 {
-  "name": "OneSoil",
-  "short_name": "OneSoil",
+  "name": "NDVI",
+  "short_name": "NDVI",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

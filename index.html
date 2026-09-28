@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OneSoil</title>
+<title>NDVI</title>
 <meta name="theme-color" content="#0E1512">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="OneSoil">
+<meta name="apple-mobile-web-app-title" content="NDVI">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -327,7 +327,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 "use strict";
-const APP_NAME = "OneSoil";
+const APP_NAME = "NDVI";
 
 /* ============================================================
    BUILT-IN CREDENTIALS — fill these four in and your users
@@ -1769,7 +1769,7 @@ function bindPage(){
     const blob=new Blob([$("bkOut").value],{type:"application/json"});
     const a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
-    a.download="onesoil-fields-"+new Date().toISOString().slice(0,10)+".json";
+    a.download="ndvi-fields-"+new Date().toISOString().slice(0,10)+".json";
     document.body.appendChild(a); a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
   };

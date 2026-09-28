@@ -1,8 +1,8 @@
-/* OneSoil — offline shell.
+/* NDVI — offline shell.
    Caches only the app shell (this page, Leaflet, fonts).
    Live data (Sentinel Hub, Open-Meteo, RainViewer, map tiles) is NEVER cached,
    so you can never be shown a stale reading that looks current. */
-const CACHE = "onesoil-shell-v33";
+const CACHE = "ndvi-shell-v33";
 const SHELL_HOSTS = ["cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", e => self.skipWaiting());
