@@ -167,6 +167,14 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
   color:#fff;box-shadow:var(--sh-s)}
 .tile .sq svg.i{width:30px;height:30px;stroke-width:2}
 .tile span{font-size:13.5px;font-weight:600;line-height:1.25;text-align:center}
+/* Locked, not hidden: the user should see the layer exists and learn what it
+   needs, rather than wonder where it went. */
+.tile.lockd{opacity:.38;filter:grayscale(1)}
+.lockmsg{margin-top:10px;text-align:center}
+.seg{display:flex;gap:6px;background:var(--surf);border-radius:999px;padding:4px}
+.segb{flex:1 1 0;border-radius:999px;padding:9px 6px;font-size:13px;font-weight:600;
+  color:var(--ink);opacity:.62;border:0;background:transparent}
+.segb.on{opacity:1;background:var(--chrome);box-shadow:var(--sh-s)}
 
 /* ---------- content blocks ---------- */
 .card{background:var(--surf);border-radius:20px;padding:16px;margin-bottom:12px}
@@ -241,6 +249,16 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 #lyrMsg.on{display:flex}
 #lyrMsg span{flex:1 1 auto;min-width:0;word-break:break-word}
 #lyrMsg button{flex:0 0 auto;color:inherit;opacity:.7;font-size:14px;padding:0 2px}
+/* The action button must not inherit the dismiss-X styling above, or the way
+   out of a cloudy week looks like a throwaway control. */
+#lyrMsgAct{flex:0 0 auto;opacity:1;font-size:12px;font-weight:650;
+  padding:5px 11px;border-radius:999px;white-space:nowrap;
+  background:var(--chrome-ink);color:var(--chrome);border:0}
+#cloudWarn{position:fixed;left:12px;right:12px;bottom:calc(92px + var(--sb));
+  z-index:617;pointer-events:none;text-align:center;font-size:11.5px;
+  font-weight:600;letter-spacing:.01em;color:#fff;
+  background:rgba(176,86,12,.92);border-radius:999px;padding:7px 12px;
+  box-shadow:var(--sh-s);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 #wxLegend{position:fixed;left:14px;top:46%;transform:translateY(-50%);z-index:616;
   width:13px;height:180px;border-radius:7px;display:none;box-shadow:var(--sh-s);
   background:linear-gradient(to top,#9AD8FF,#3D9BFF,#1E4FD6,#8A2BD6,#D8306B)}
@@ -374,7 +392,15 @@ const ic = (k, sz) => `<svg class="i" viewBox="0 0 24 24"${sz?` style="width:${s
 const LANGS=["zh","en","ms"], LL={zh:"中",en:"EN",ms:"BM"};
 const T={
 zh:{
- mBlank:"伺服器回了一张空图：这个日期范围和云量上限内没有可用影像。把云量上限调高、或把天数拉长再试。",
+ mBlank:"这个条件下没有可用影像 —— 多半是被云挡住了。",
+ mBlankFix:"改成有云也显示",
+ mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
+ cloudMode:"云层", clearOnly:"只看晴天", anyCloud:"有云也显示",
+ cloudWarn:"未过滤云层 · 数值仅供参考",
+ clearHint:"只用云量低于上限的影像。资料干净，但多云时可能连续几天空白。",
+ anyHint:"不过滤云量，一定给得出最近一张影像。但云和云影会压低数值，别拿来判断田况。",
+ lockNoField:"先选一块地才能开这个图层",
+ maxTwo:"最多只能画两块地。要加新的，先删掉一块。",
  mQuota:"请求被拒",
  rate429:"被限流（每分钟请求数超过上限）。等一分钟再试，别连续切图层。",
  tTiles:"实际取一张瓦片：", tBlank:"回传空白图（该条件下没有可用影像）",
@@ -468,7 +494,15 @@ zh:{
  tAvail:"可用图层："
 },
 en:{
- mBlank:"The server returned an empty image: no usable scene within this date range and cloud limit. Raise the cloud limit or widen the day window.",
+ mBlank:"No usable scene for these settings — most likely cloud cover.",
+ mBlankFix:"Show it with clouds",
+ mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
+ cloudMode:"Clouds", clearOnly:"Clear days only", anyCloud:"Show with clouds",
+ cloudWarn:"Clouds not filtered · values are indicative only",
+ clearHint:"Only scenes below the cloud limit. Clean data, but can stay blank for days in cloudy weather.",
+ anyHint:"No cloud filtering, so you always get the most recent scene. Cloud and cloud shadow depress the values — do not judge crop health from it.",
+ lockNoField:"Select a field first to use this layer",
+ maxTwo:"Two fields maximum. Delete one before adding another.",
  mQuota:"Request refused",
  rate429:"Rate limited (too many requests this minute). Wait a minute and avoid switching layers rapidly.",
  tTiles:"Real tile request:", tBlank:"blank image returned (no usable scene for these settings)",
@@ -562,7 +596,15 @@ en:{
  tAvail:"Layers found: "
 },
 ms:{
- mBlank:"Pelayan memulangkan imej kosong: tiada imej sesuai dalam julat tarikh dan had awan ini. Naikkan had awan atau lebarkan julat hari.",
+ mBlank:"Tiada imej sesuai untuk tetapan ini — kemungkinan besar dilindungi awan.",
+ mBlankFix:"Tunjuk walaupun berawan",
+ mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
+ cloudMode:"Awan", clearOnly:"Hari cerah sahaja", anyCloud:"Tunjuk walaupun berawan",
+ cloudWarn:"Awan tidak ditapis · nilai sebagai panduan sahaja",
+ clearHint:"Hanya imej di bawah had awan. Data bersih, tetapi boleh kosong berhari-hari ketika berawan.",
+ anyHint:"Tiada penapisan awan, jadi sentiasa ada imej terkini. Awan dan bayang awan menurunkan nilai — jangan nilai kesihatan tanaman daripadanya.",
+ lockNoField:"Pilih kebun dahulu untuk guna lapisan ini",
+ maxTwo:"Maksimum dua kebun. Padam satu sebelum tambah yang baharu.",
  mQuota:"Permintaan ditolak",
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
  seeMap:"Lihat peta",
@@ -777,62 +819,168 @@ function swapBase(){
   if(curBase) map.removeLayer(curBase);
   curBase=want; curBase.addTo(map); curBase.bringToBack();
 }
-let wmsLayer=null, fieldLayers=[], draftLayer=null, draftDots=[], drawing=false, draftPts=[];
+let fieldLayers=[], draftLayer=null, draftDots=[], drawing=false, draftPts=[];
 const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${cfg.instanceId}`:null;
 
 let satDate = new Date().toISOString().slice(0,10), satWin = 30;
+/* Layers that come from Sentinel Hub and therefore cost processing units.
+   Each one is drawn only inside the selected field, never across the map. */
+const SAT_LAYERS = ["NDVI","PROD","MOIST","TRUE"];
+const isSat = k => SAT_LAYERS.includes(k);
+
+/* Clear-day filtering. Off means "show me the most recent scene whatever the
+   cloud cover" so a cloudy week never looks like a broken app. */
+let cloudAny = LS.get("os.cloudAny")==="1";
+const effMaxcc = ()=> cloudAny ? 100 : cfg.maxcc;
+
+let satLayer=null, satWarn=null;
+const imgCache = new Map();          // request url -> object url
+
+/* Ring is [[lng,lat],...]. Returns Leaflet bounds plus the 3857 extent the
+   WMS request is made in, so the image and the map agree exactly. */
+function ringExtent(ring){
+  let w= 180, e=-180, s= 90, n=-90;
+  for(const [lng,lat] of ring){
+    if(lng<w)w=lng; if(lng>e)e=lng; if(lat<s)s=lat; if(lat>n)n=lat;
+  }
+  /* A field drawn as a thin sliver would otherwise ask for a zero-width
+     image, so keep a floor of roughly 30 m. */
+  const pad = 3e-4;
+  if(e-w < pad){ const c=(e+w)/2; w=c-pad/2; e=c+pad/2; }
+  if(n-s < pad){ const c=(n+s)/2; s=c-pad/2; n=c+pad/2; }
+  /* Bound, not detached: CRS.project reads this.projection internally. */
+  const P  = ll => map.options.crs.project(ll);
+  const sw = P(L.latLng(s,w)), ne = P(L.latLng(n,e));
+  return {w,e,s,n, bounds:L.latLngBounds([s,w],[n,e]),
+          minX:sw.x, minY:sw.y, maxX:ne.x, maxY:ne.y};
+}
+
+/* CSS clip-path in percentages of the image box. Because the image is
+   requested in 3857 and placed by Leaflet in 3857, these percentages stay
+   correct at every zoom with no recomputation. */
+function ringClip(ring, ex){
+  const P = ll => map.options.crs.project(ll);
+  const dx = ex.maxX-ex.minX, dy = ex.maxY-ex.minY;
+  const pts = ring.map(([lng,lat])=>{
+    const q = P(L.latLng(lat,lng));
+    return ((q.x-ex.minX)/dx*100).toFixed(3)+"% "+((ex.maxY-q.y)/dy*100).toFixed(3)+"%";
+  });
+  return "polygon("+pts.join(",")+")";
+}
+
+function clearSatLayer(){
+  if(satLayer){ map.removeLayer(satLayer); satLayer=null; }
+  if(satWarn){ satWarn.remove(); satWarn=null; }
+}
+
+let satReq = 0;
 function applyLayer(){
   swapBase();
-  if(wmsLayer){map.removeLayer(wmsLayer); wmsLayer=null;}
+  clearSatLayer();
   const m = {NDVI:cfg.layerNdvi,MOIST:cfg.layerMoist,PROD:cfg.layerProd,TRUE:cfg.layerTrue,OFF:"",STREET:""};
   const name = m[layerKey]||"";
-  if(!name || !wmsUrl()) return;
-  const opts = {
-    layers:name, format:"image/png", transparent:true, version:"1.3.0",
-    opacity:.92, showlogo:false,
-    attribution:"Sentinel-2 © Copernicus · Sentinel Hub"
-  };
+  if(!name) return lyrMsg("");
+  if(!wmsUrl()) return lyrMsg(t().needSetup);
+
+  const f = activeField();
+  if(isSat(layerKey) && !f){ setStatus("ok",""); return lyrMsg(t().lockNoField); }
+
+  const ex = ringExtent(f.ring);
+  /* Sentinel-2 is 10 m, so asking for more pixels than the field has buys
+     nothing and costs the same PU as a real improvement would. Cap the long
+     side at 512 px, which is one PU at three bands. */
+  const midLat = (ex.n+ex.s)/2 * Math.PI/180;
+  const mW = (ex.e-ex.w)*111320*Math.cos(midLat), mH = (ex.n-ex.s)*110540;
+  const long = Math.max(mW,mH);
+  const px   = Math.max(64, Math.min(512, Math.round(long/10)));
+  const width  = Math.max(32, Math.round(px*(mW/long)));
+  const height = Math.max(32, Math.round(px*(mH/long)));
+
+  const q = new URLSearchParams({
+    service:"WMS", request:"GetMap", version:"1.3.0", layers:name, styles:"",
+    format:"image/png", transparent:"true", crs:"EPSG:3857",
+    bbox:[ex.minX,ex.minY,ex.maxX,ex.maxY].join(","),
+    width:String(width), height:String(height), showlogo:"false"
+  });
   /* Productivity averages three years, and that range plus its cloud filter
      live in the CDSE layer itself. Sending time/maxcc here would override
      them and silently reduce it to a single recent scene. */
   if(layerKey !== "PROD"){
     const from = new Date(new Date(satDate).getTime()-satWin*864e5).toISOString().slice(0,10);
-    opts.maxcc = cfg.maxcc;
-    opts.time  = `${from}/${satDate}`;
+    q.set("time", from+"/"+satDate);
+    q.set("maxcc", String(effMaxcc()));
   }
-  /* Sentinel Hub limits requests per minute as well as PU per minute. One
-     512 px tile costs the same PU as the four 256 px tiles it replaces, but
-     counts as a single request, so this cuts request pressure by ~4x.
-     updateWhenIdle/updateWhenZooming stop mid-gesture bursts. */
-  opts.tileSize = 512;
-  opts.updateWhenIdle = true;
-  opts.updateWhenZooming = false;
-  opts.keepBuffer = 0;
-  wmsLayer = L.tileLayer.wms(wmsUrl(), opts).addTo(map);
-  let tileErrs=0;
-  wmsLayer.on("tileerror",()=>{
-    /* Leaflet gives no status code here, so probe once to find out whether
-       this is throttling or a real failure, and only once per layer load. */
-    if(tileErrs++) return;
-    setStatus("bad", t().layerFail);
-    probeLayer(name).then(r=>{
-      if(!r.ok && /HTTP 429/.test(r.why||"")) setStatus("bad", t().rate429);
-      else if(!r.ok && r.why) setStatus("bad", r.why.slice(0,120));
-    }).catch(()=>{});
-  });
-  wmsLayer.on("load",()=>setStatus("ok",t().loaded));
-  setStatus("busy",t().loading);
+  const url = wmsUrl()+"?"+q.toString();
 
-  /* One 64 px probe per layer switch, so a silent blank never looks the same
-     as a working layer. Costs a negligible fraction of a processing unit. */
-  lyrMsg("");
-  probeLayer(name).then(r=>{
-    if(r.ok && !r.blank) return;                       // genuinely fine
-    if(r.ok && r.blank)  return lyrMsg(t().mBlank);
-    if(/HTTP 429/.test(r.why||"")) return lyrMsg(t().rate429);
-    if(/HTTP 40[13]/.test(r.why||"")) return lyrMsg(t().mQuota+" · "+r.why);
-    lyrMsg(r.why || t().layerFail);
-  }).catch(()=>{});
+  const my = ++satReq;
+  setStatus("busy", t().loading); lyrMsg("");
+  getImage(url).then(res=>{
+    if(my!==satReq) return;                       // a newer request superseded us
+    if(!res.ok){
+      setStatus("bad", t().layerFail);
+      if(res.noPU) return lyrMsg(t().mNoPU);
+      if(/HTTP 429/.test(res.why||"")) return lyrMsg(t().rate429);
+      if(/HTTP 40[13]/.test(res.why||"")) return lyrMsg(t().mQuota+" · "+res.why);
+      return lyrMsg(res.why || t().layerFail);
+    }
+    if(res.blank){
+      setStatus("ok","");
+      /* Blank almost always means cloud. Offer the way out instead of asking
+         the user to reason about two separate controls. */
+      return lyrMsg(t().mBlank, cloudAny ? null : {label:t().mBlankFix, act:()=>setCloudAny(true)});
+    }
+    satLayer = L.imageOverlay(res.src, ex.bounds, {
+      opacity:.92, interactive:false,
+      attribution:"Sentinel-2 © Copernicus · Sentinel Hub"
+    }).addTo(map);
+    const el = satLayer.getElement();
+    if(el){ el.style.clipPath = el.style.webkitClipPath = ringClip(f.ring, ex); }
+    setStatus("ok", t().loaded);
+    if(cloudAny) showCloudWarn();
+  });
+}
+
+/* One fetch per distinct request, reused for the rest of the session. Also
+   the blank check, so no separate probe request is needed any more. */
+async function getImage(url){
+  if(imgCache.has(url)) return {ok:true, blank:false, src:imgCache.get(url)};
+  let r;
+  try{ r = await fetch(url); }
+  catch(e){ return {ok:false, why:"network: "+(e.message||e)}; }
+  const ct = r.headers.get("content-type")||"";
+  if(r.ok && ct.indexOf("image")===0){
+    const b = await r.blob();
+    if(b.size<900) return {ok:true, blank:true};   // valid but empty PNG
+    const src = URL.createObjectURL(b);
+    imgCache.set(url, src);
+    return {ok:true, blank:false, src};
+  }
+  const raw = await r.text();
+  /* The reason lives inside <![CDATA[ ... ]]>, which a generic tag-strip
+     deletes whole — the server explains itself and the app throws it away. */
+  const m = raw.match(/<!\[CDATA\[([\s\S]*?)\]\]>/)
+         || raw.match(/<ServiceException[^>]*>([\s\S]*?)<\/ServiceException>/);
+  const body = ((m&&m[1]) || raw.replace(/<[^>]+>/g," ")).replace(/\s+/g," ").trim();
+  const ra = r.headers.get("retry-after");
+  const extra = r.status===429 ? " · retry-after "+(ra||"?") : "";
+  return {ok:false, noPU:/insufficient processing unit|acquire additional credit/i.test(body),
+          why:"HTTP "+r.status+extra+" · "+body.slice(0,200)};
+}
+
+function setCloudAny(on){
+  cloudAny = !!on; LS.set("os.cloudAny", on?"1":"0");
+  applyLayer(); if(sheetEl.classList.contains("on")) openLayerSheet();
+}
+
+/* A standing reminder, not a dismissable toast: an unfiltered NDVI reads low
+   wherever cloud or cloud shadow falls, and that looks exactly like a sick
+   crop. The user must be able to see this at a glance. */
+function showCloudWarn(){
+  if(!isSat(layerKey) || layerKey==="PROD") return;
+  satWarn = document.createElement("div");
+  satWarn.id = "cloudWarn";
+  satWarn.textContent = "⚠ "+t().cloudWarn;
+  document.body.appendChild(satWarn);
 }
 function drawFields(fit){
   fieldLayers.forEach(l=>map.removeLayer(l)); fieldLayers=[];
@@ -1112,7 +1260,7 @@ function mapChromeVisible(){
   $("rightcol").style.display=onMap?"":"none";
   $("layerPill").style.display=m?"":"none";
   if(!m) lyrMsg("");
-  $("btnDraw").hidden=!m;
+  $("btnDraw").hidden = !m || (!drawing && fields.length>=MAX_FIELDS);
   $("btnRadar").hidden=!w;
   $("btnRadar").classList.toggle("on",radarOn);
   $("wxwrap").classList.toggle("on",w);
@@ -1149,12 +1297,18 @@ const TILE_BG={
 const TILE_IC={OFF:"none",STREET:"grid",TRUE:"sat",NDVI:"leaf",PROD:"crop",MOIST:"drop"};
 function openLayerSheet(){
   const ks=["OFF","TRUE","NDVI","PROD","MOIST","STREET"];
+  /* Every Sentinel layer is drawn inside one field, so without a selected
+     field there is nothing for it to draw into. Lock rather than hide, so
+     the user can see the capability exists and what it needs. */
+  const lock = k => isSat(k) && !activeField();
+  const anyLocked = ks.some(lock);
   openSheet(`<h2>${t().lyrSheet}</h2>
     <div class="tiles">${ks.map(k=>
-      `<button class="tile" data-k="${k}" aria-pressed="${layerKey===k}">
+      `<button class="tile${lock(k)?" lockd":""}" data-k="${k}"${lock(k)?" disabled":""} aria-pressed="${layerKey===k}">
         <span class="sq" style="background:${TILE_BG[k]}">${ic(TILE_IC[k],30)}</span>
         <span>${t().lyr[k]}</span></button>`).join("")}</div>
-    ${["NDVI","PROD","MOIST","TRUE"].includes(layerKey)?satControls():""}`);
+    ${anyLocked?`<p class="sub lockmsg">${t().lockNoField}</p>`:""}
+    ${isSat(layerKey)&&activeField()?satControls():""}`);
   bindSheet();
 }
 function satControls(){
@@ -1168,8 +1322,15 @@ function satControls(){
       </select>
     </div>
     <p class="sub">${t().satWin}</p>
-    <label class="f">${t().maxcc} — <span id="satCCLab">${cfg.maxcc}%</span></label>
-    <input type="range" id="satCC" min="5" max="90" step="5" value="${cfg.maxcc}">
+    <label class="f">${t().cloudMode}</label>
+    <div class="seg">
+      <button class="segb${cloudAny?"":" on"}" data-cloud="0">${t().clearOnly}</button>
+      <button class="segb${cloudAny?" on":""}" data-cloud="1">${t().anyCloud}</button>
+    </div>
+    <p class="sub">${cloudAny?t().anyHint:t().clearHint}</p>
+    ${cloudAny?"":`
+      <label class="f">${t().maxcc} — <span id="satCCLab">${cfg.maxcc}%</span></label>
+      <input type="range" id="satCC" min="5" max="90" step="5" value="${cfg.maxcc}">`}
     ${(layerKey==="NDVI"||layerKey==="PROD")?`
       <div class="ramp"><i style="background:#A0522D"></i><i style="background:#D4A72C"></i>
       <i style="background:#9ACD32"></i><i style="background:#3CB44B"></i><i style="background:#0B5B2A"></i></div>
@@ -1179,7 +1340,10 @@ function satControls(){
     <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`;
 }
 function bindSheet(){
+  sheetEl.querySelectorAll("[data-cloud]").forEach(b=>b.onclick=()=>
+    setCloudAny(b.dataset.cloud==="1"));
   sheetEl.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{
+    if(b.disabled) return;
     layerKey=b.dataset.k; LS.set("os.layer", layerKey);
     applyLayer(); renderTop();
     /* The sheet covers most of the screen. Re-opening it here meant the user
@@ -1244,10 +1408,19 @@ function wmsLayerNames(xml){
 }
 
 
-function lyrMsg(txt){
-  const el=$("lyrMsg");
+function lyrMsg(txt, action){
+  const el=$("lyrMsg"), old=$("lyrMsgAct");
+  if(old) old.remove();
   if(!txt){ el.classList.remove("on"); return; }
   $("lyrMsgTx").textContent=txt;
+  /* A message that states a problem the user cannot act on is just noise.
+     When there is a one-tap way out, put it right next to the sentence. */
+  if(action){
+    const b=document.createElement("button");
+    b.id="lyrMsgAct"; b.textContent=action.label;
+    b.onclick=()=>{ lyrMsg(""); action.act(); };
+    $("lyrMsgTx").after(b);
+  }
   el.classList.add("on");
 }
 $("lyrMsgX").onclick=()=>lyrMsg("");
@@ -1261,12 +1434,15 @@ function drawSetChrome(){
   b.classList.toggle("on", drawing);
   b.innerHTML = drawing ? DONE_ICON : DRAW_ICON;
   b.title = drawing ? t().drawStart : t().addField;
+  b.hidden = view!=="map" || (!drawing && fields.length>=MAX_FIELDS);
   $("btnUndo").hidden   = !drawing || view !== "map";
   $("btnCancel").hidden = !drawing || view !== "map";
   $("btnCancel").title  = t().drawCancel;
 }
 
+const MAX_FIELDS = 2;
 function drawBegin(){
+  if(fields.length >= MAX_FIELDS){ setStatus("bad", t().maxTwo); return; }
   drawing = true; draftPts = []; refreshDraft();
   drawSetChrome(); setStatus("busy", t().drawStart);
 }
@@ -1285,7 +1461,7 @@ function drawEnd(save){
     setStatus("ok", t().drawGone);
   }
   drawing = false; draftPts = []; refreshDraft();
-  drawSetChrome(); drawFields(); renderTop();
+  drawSetChrome(); drawFields(); applyLayer(); renderTop();
 }
 
 $("btnDraw").onclick   = ()=> drawing ? drawEnd(true) : drawBegin();
@@ -1425,7 +1601,8 @@ $("btnLoc").onclick=()=>{
 $("fieldBtn").onclick=()=>{ view="fields"; renderAll(); };
 function onFieldChange(){
   series={rows:[],err:null,busy:false}; wx={data:null,err:null,busy:false,at:null}; wxHour=0; wxScrollPending=true;
-  drawFields(); renderTop(); if(view==="wx"){renderWx();ensureWeather();} else if(view!=="map") renderPage();
+  drawFields(); applyLayer(); renderTop();
+  if(view==="wx"){renderWx();ensureWeather();} else if(view!=="map") renderPage();
 }
 
 /* ===================== pages ===================== */
