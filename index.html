@@ -12,7 +12,8 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+  integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap">
 <style>
@@ -173,8 +174,8 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 .lockmsg{margin-top:10px;text-align:center}
 .seg{display:flex;gap:6px;background:var(--surf);border-radius:999px;padding:4px}
 .segb{flex:1 1 0;border-radius:999px;padding:9px 6px;font-size:13px;font-weight:600;
-  color:var(--ink);opacity:.62;border:0;background:transparent}
-.segb.on{opacity:1;background:var(--chrome);box-shadow:var(--sh-s)}
+  color:var(--text);opacity:.62;border:0;background:transparent}
+.segb.on{opacity:1;background:var(--chrome);color:var(--chrome-ink);box-shadow:var(--sh-s)}
 
 /* ---------- content blocks ---------- */
 .card{background:var(--surf);border-radius:20px;padding:16px;margin-bottom:12px}
@@ -254,10 +255,13 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 #lyrMsgAct{flex:0 0 auto;opacity:1;font-size:12px;font-weight:650;
   padding:5px 11px;border-radius:999px;white-space:nowrap;
   background:var(--chrome-ink);color:var(--chrome);border:0}
-#cloudWarn{position:fixed;left:12px;right:12px;bottom:calc(92px + var(--sb));
-  z-index:617;pointer-events:none;text-align:center;font-size:11.5px;
+/* Above the layer pill, and narrow enough to clear the button column on the
+   right. It used to sit at 92 px, inside the pill's 82-136 px, underneath it. */
+#cloudWarn{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--above) + 64px);width:max-content;max-width:calc(100% - 172px);
+  z-index:617;pointer-events:none;text-align:center;font-size:11.5px;line-height:1.35;
   font-weight:600;letter-spacing:.01em;color:#fff;
-  background:rgba(176,86,12,.92);border-radius:999px;padding:7px 12px;
+  background:rgba(176,86,12,.92);border-radius:14px;padding:7px 12px;
   box-shadow:var(--sh-s);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 #wxLegend{position:fixed;left:14px;top:46%;transform:translateY(-50%);z-index:616;
   width:13px;height:180px;border-radius:7px;display:none;box-shadow:var(--sh-s);
@@ -342,7 +346,8 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
   <div id="sheetBody"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
+  integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="anonymous"></script>
 <script>
 "use strict";
 const APP_NAME = "NDVI";
@@ -394,6 +399,9 @@ const T={
 zh:{
  mBlank:"这个条件下没有可用影像 —— 多半是被云挡住了。",
  mBlankFix:"改成有云也显示",
+ moistLo:"干", moistHi:"湿",
+ bkOver:"；已达两块上限，另有 {n} 块没加入",
+ undo:"撤销上一个点", locMe:"定位到我", themeL:"切换深色 / 浅色", langL:"切换语言",
  mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
  cloudMode:"云层", clearOnly:"只看晴天", anyCloud:"有云也显示",
  cloudWarn:"未过滤云层 · 数值仅供参考",
@@ -405,7 +413,7 @@ zh:{
  rate429:"被限流（每分钟请求数超过上限）。等一分钟再试，别连续切图层。",
  tTiles:"实际取一张瓦片：", tBlank:"回传空白图（该条件下没有可用影像）",
  setT8:"长势 / 水分图层脚本（选用）",
- idxNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
+ scriptNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
  wxErr:"这个位置没有逐小时预报资料",
  seeMap:"看地图",
  secShow:"显示 / 隐藏 Secret",
@@ -496,6 +504,9 @@ zh:{
 en:{
  mBlank:"No usable scene for these settings — most likely cloud cover.",
  mBlankFix:"Show it with clouds",
+ moistLo:"Dry", moistHi:"Wet",
+ bkOver:"; {n} more not added (two-field limit)",
+ undo:"Undo last point", locMe:"Show my location", themeL:"Switch dark / light", langL:"Change language",
  mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
  cloudMode:"Clouds", clearOnly:"Clear days only", anyCloud:"Show with clouds",
  cloudWarn:"Clouds not filtered · values are indicative only",
@@ -507,7 +518,7 @@ en:{
  rate429:"Rate limited (too many requests this minute). Wait a minute and avoid switching layers rapidly.",
  tTiles:"Real tile request:", tBlank:"blank image returned (no usable scene for these settings)",
  setT8:"Vegetation / moisture layer scripts (optional)",
- idxNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
+ scriptNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
  wxErr:"No hourly forecast for this location",
  seeMap:"See the map",
  secShow:"Show / hide secret",
@@ -598,6 +609,9 @@ en:{
 ms:{
  mBlank:"Tiada imej sesuai untuk tetapan ini — kemungkinan besar dilindungi awan.",
  mBlankFix:"Tunjuk walaupun berawan",
+ moistLo:"Kering", moistHi:"Basah",
+ bkOver:"; {n} lagi tidak ditambah (had dua kebun)",
+ undo:"Buang titik terakhir", locMe:"Tunjuk lokasi saya", themeL:"Tukar gelap / cerah", langL:"Tukar bahasa",
  mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
  cloudMode:"Awan", clearOnly:"Hari cerah sahaja", anyCloud:"Tunjuk walaupun berawan",
  cloudWarn:"Awan tidak ditapis · nilai sebagai panduan sahaja",
@@ -612,7 +626,7 @@ ms:{
  rate429:"Dihadkan kadar (terlalu banyak permintaan seminit). Tunggu seminit sebelum cuba lagi.",
  tTiles:"Permintaan jubin sebenar:", tBlank:"imej kosong (tiada imej sesuai untuk tetapan ini)",
  setT8:"Skrip lapisan tumbuhan / lembapan (pilihan)",
- idxNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
+ scriptNote:"Warna legenda dilukis daripada dua skrip ini. Jika lapisan CDSE anda masih guna skrip templat, warnanya mungkin tidak sepadan. Tampal skrip ini ke lapisan berkenaan supaya kedua-duanya sepadan. Ia juga menambah topeng awan SCL.",
  tMissing:"Tiada dalam konfigurasi: ", tAllMatch:"Keempat-empat nama lapisan sepadan",
  setT7:"Sudah disediakan", preNote:"Lapisan, cuaca dan carian telah disediakan oleh pembangun. Tiada apa perlu diisi.",
  advShow:"Guna kunci sendiri (lanjutan)", advHide:"Sembunyikan tetapan lanjutan",
@@ -715,24 +729,47 @@ const LS = (()=>{
                       catch(_){ return fallback; } }
   };
 })();
+/* The user's calendar date. toISOString() is UTC, so in Malaysia it still
+   said yesterday until 8 am: the date picker could not select today. */
+const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 let lang = LS.get("os.lang"); if(!LANGS.includes(lang)) lang="zh";
 const t = () => T[lang];
 
 /* ===================== state ===================== */
-const savedCfg = LS.json("os.cfg", {}) || {};
-/* An empty string saved on this device must not blank out a built-in value. */
-for(const k of Object.keys(savedCfg)) if(savedCfg[k]==="") delete savedCfg[k];
-const cfg = Object.assign({
+const CFG_BASE = Object.assign({
   instanceId:"",clientId:"",clientSecret:"",proxy:"",gkey:"",
   layerNdvi:"NDVI",layerTrue:"TRUE-COLOR",layerMoist:"MOISTURE-INDEX",layerProd:"PRODUCTIVITY",maxcc:60
-}, BUILT_IN, savedCfg);
+}, BUILT_IN);
+let savedCfg = LS.json("os.cfg", {});
+if(!savedCfg || typeof savedCfg!=="object" || Array.isArray(savedCfg)) savedCfg = {};
+/* Saving used to write the whole config, built-in values included, and a
+   saved value beats a built-in one. So any phone that once moved the cloud
+   slider kept that day's built-ins for ever: when the layer names changed
+   to VEGETATION_INDEX / TRUE_COLOR / MOISTURE_INDEX, those phones went on
+   asking for layers that no longer existed. Drop anything that is only a
+   copy of a built-in, and on the built-in account drop the old layer names,
+   which could only have come from that freezing. */
+for(const k of Object.keys(savedCfg))
+  if(savedCfg[k]==="" || savedCfg[k]===CFG_BASE[k]) delete savedCfg[k];
+if(BUILT_IN.instanceId && (!savedCfg.instanceId || savedCfg.instanceId===BUILT_IN.instanceId)){
+  const OLD = {layerNdvi:"NDVI", layerTrue:"TRUE-COLOR", layerMoist:"MOISTURE-INDEX"};
+  for(const k in OLD) if(savedCfg[k]===OLD[k]) delete savedCfg[k];
+}
+const cfg = Object.assign({}, CFG_BASE, savedCfg);
 let fields = LS.json("os.fields", []);
 if(!Array.isArray(fields)) fields=[];
 let activeId = fields[0]?fields[0].id:null;
 let theme = LS.get("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
-let layerKey = LS.get("os.layer") || "TRUE";
+const LAYER_KEYS = ["OFF","TRUE","NDVI","PROD","MOIST","STREET"];
+let layerKey = LS.get("os.layer");
+if(!LAYER_KEYS.includes(layerKey)) layerKey = "TRUE";
 let view = "map";
-const saveCfg = ()=>LS.set("os.cfg",JSON.stringify(cfg));
+/* Only what this device changed, so a later change to BUILT_IN still reaches it. */
+const saveCfg = ()=>{
+  const own = {};
+  for(const k in cfg) if(cfg[k]!=="" && cfg[k]!==CFG_BASE[k]) own[k] = cfg[k];
+  LS.set("os.cfg", JSON.stringify(own));
+};
 const BUILD = "2026-09-27-l";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
@@ -788,14 +825,22 @@ function parseBackup(txt){
   if(!arr || !arr.length) return null;
   const ok=[];
   for(const f of arr){
-    if(!f || typeof f.id!=="string" || typeof f.name!=="string") return null;
+    /* The id goes into an HTML attribute (data-f="…"), so a backup passed
+       around by message must not be able to carry markup in it. */
+    if(!f || typeof f.id!=="string" || !/^[A-Za-z0-9_-]{1,64}$/.test(f.id)) return null;
+    if(typeof f.name!=="string" || !f.name.trim()) return null;
     if(!Array.isArray(f.ring) || f.ring.length<3) return null;
     for(const pt of f.ring){
       if(!Array.isArray(pt) || pt.length<2) return null;
       const lon=+pt[0], lat=+pt[1];
       if(!isFinite(lon)||!isFinite(lat)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
     }
-    ok.push({id:f.id, name:f.name, ring:f.ring.map(p=>[+p[0],+p[1]])});
+    /* Closed, as the app draws them. An open ring is a 400 from the
+       Statistical API and loses its last edge in the area and centroid. */
+    const ring=f.ring.map(p=>[+p[0],+p[1]]), a=ring[0], z=ring[ring.length-1];
+    if(a[0]!==z[0] || a[1]!==z[1]) ring.push([a[0],a[1]]);
+    if(ring.length<4) return null;
+    ok.push({id:f.id, name:f.name.trim(), ring});
   }
   return ok;
 }
@@ -822,7 +867,7 @@ function swapBase(){
 let fieldLayers=[], draftLayer=null, draftDots=[], drawing=false, draftPts=[];
 const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${cfg.instanceId}`:null;
 
-let satDate = new Date().toISOString().slice(0,10), satWin = 30;
+let satDate = ymd(new Date()), satWin = 30;
 /* Layers that come from Sentinel Hub and therefore cost processing units.
    Each one is drawn only inside the selected field, never across the map. */
 const SAT_LAYERS = ["NDVI","PROD","MOIST","TRUE"];
@@ -943,33 +988,63 @@ function applyLayer(){
 /* One fetch per distinct request, reused for the rest of the session. Also
    the blank check, so no separate probe request is needed any more. */
 async function getImage(url){
-  if(imgCache.has(url)) return {ok:true, blank:false, src:imgCache.get(url)};
+  if(imgCache.has(url)){
+    /* re-inserted so the Map's order is least-recently-used first */
+    const src = imgCache.get(url); imgCache.delete(url); imgCache.set(url, src);
+    return {ok:true, blank:false, src};
+  }
   let r;
   try{ r = await fetch(url); }
   catch(e){ return {ok:false, why:"network: "+(e.message||e)}; }
   const ct = r.headers.get("content-type")||"";
   if(r.ok && ct.indexOf("image")===0){
     const b = await r.blob();
-    if(b.size<900) return {ok:true, blank:true};   // valid but empty PNG
+    if(await isBlankImage(b)) return {ok:true, blank:true};
     const src = URL.createObjectURL(b);
     imgCache.set(url, src);
+    /* Each entry holds a decoded image in memory for the whole session. */
+    while(imgCache.size > 24){
+      const [k, v] = imgCache.entries().next().value;
+      URL.revokeObjectURL(v); imgCache.delete(k);
+    }
     return {ok:true, blank:false, src};
   }
-  const raw = await r.text();
-  /* The reason lives inside <![CDATA[ ... ]]>, which a generic tag-strip
-     deletes whole — the server explains itself and the app throws it away. */
+  return Object.assign({ok:false}, wmsFailure(r.status, await r.text(), r.headers.get("retry-after")));
+}
+
+/* Blank means every pixel is transparent. This used to be "under 900 bytes",
+   which was right for the old 64 px probe of a 2 km box but wrong for a small
+   field: an evenly green 64x47 image compresses to a few hundred bytes, and
+   was reported as cloud. */
+async function isBlankImage(blob){
+  try{
+    const bmp = await createImageBitmap(blob);
+    const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height;
+    const g = c.getContext("2d"); g.drawImage(bmp, 0, 0);
+    const px = g.getImageData(0, 0, c.width, c.height).data;
+    for(let i=3; i<px.length; i+=4) if(px[i] !== 0) return false;
+    return true;
+  }catch(_){ return blob.size < 200; }   // cannot decode here: only a truly tiny file
+}
+
+/* Sentinel Hub explains a refusal inside <![CDATA[ ... ]]>, which a generic
+   tag-strip deletes whole — the server explains itself and the app threw it
+   away. Shared by the map and the connection test. */
+function wmsFailure(status, raw, retryAfter){
   const m = raw.match(/<!\[CDATA\[([\s\S]*?)\]\]>/)
          || raw.match(/<ServiceException[^>]*>([\s\S]*?)<\/ServiceException>/);
   const body = ((m&&m[1]) || raw.replace(/<[^>]+>/g," ")).replace(/\s+/g," ").trim();
-  const ra = r.headers.get("retry-after");
-  const extra = r.status===429 ? " · retry-after "+(ra||"?") : "";
-  return {ok:false, noPU:/insufficient processing unit|acquire additional credit/i.test(body),
-          why:"HTTP "+r.status+extra+" · "+body.slice(0,200)};
+  const extra = status===429 ? " · retry-after "+(retryAfter||"?") : "";
+  return {status, noPU:/insufficient processing unit|acquire additional credit/i.test(body),
+          why:"HTTP "+status+extra+" · "+body.slice(0,200)};
 }
 
 function setCloudAny(on){
   cloudAny = !!on; LS.set("os.cloudAny", on?"1":"0");
-  applyLayer(); if(sheetEl.classList.contains("on")) openLayerSheet();
+  applyLayer();
+  if(sheetEl.classList.contains("on")){
+    const y = sheetEl.scrollTop; openLayerSheet(); sheetEl.scrollTop = y;
+  }
 }
 
 /* A standing reminder, not a dismissable toast: an unfiltered NDVI reads low
@@ -1068,6 +1143,12 @@ let idxState={index:"NDVI",months:12};
 async function fetchSeries(k,from,to){
   const f=activeField(); if(!f) throw new Error(t().needField);
   const tk=await getToken();
+  /* resx/resy are in the units of the bounds' CRS, and the bounds are CRS84,
+     so they are degrees. This sent 10 — ten degrees, about 1,100 km — and the
+     whole field became a single pixel: mean, P25 and P75 were one value.
+     10 m expressed in degrees at this field's latitude: */
+  const lat = ringCentroid(f.ring)[1] * Math.PI/180;
+  const resy = 10/110540, resx = 10/(111320*Math.max(0.01, Math.cos(lat)));
   const r=await fetch("https://sh.dataspace.copernicus.eu/api/v1/statistics",{
     method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+tk},
     body:JSON.stringify({
@@ -1075,7 +1156,7 @@ async function fetchSeries(k,from,to){
         properties:{crs:"http://www.opengis.net/def/crs/OGC/1.3/CRS84"}},
         data:[{type:"sentinel-2-l2a",dataFilter:{mosaickingOrder:"leastCC"}}]},
       aggregation:{timeRange:{from:from+"T00:00:00Z",to:to+"T23:59:59Z"},
-        aggregationInterval:{of:"P10D"},resx:10,resy:10,evalscript:evalscript(k)},
+        aggregationInterval:{of:"P10D"},resx:+resx.toPrecision(6),resy:+resy.toPrecision(6),evalscript:evalscript(k)},
       calculations:{index:{statistics:{default:{percentiles:{k:[25,50,75]}}}}}})});
   if(!r.ok) throw new Error(t().statFail+r.status+" · "+(await r.text()).slice(0,200));
   const j=await r.json(),rows=[];
@@ -1102,20 +1183,29 @@ async function fetchWeather(){
   const j=await r.json();
   return {j,lat,lon};
 }
-function nowHourIndex(h){
+/* Open-Meteo gives local times with no offset ("2026-10-01T14:00") plus
+   utc_offset_seconds. new Date() read them in the phone's zone, so "now" was
+   off by the difference whenever the phone and the field disagreed. */
+function nowHourIndex(times, offsetSec){
   const n=Date.now();
-  for(let i=0;i<h.time.length;i++) if(new Date(h.time[i]).getTime()>n) return Math.max(0,i-1);
-  return 0;
+  for(let i=0;i<times.length;i++)
+    if(Date.parse(times[i]+"Z") - (offsetSec||0)*1000 > n) return Math.max(0,i-1);
+  return Math.max(0,times.length-1);
 }
 async function ensureWeather(){
   if(!activeField() || wx.busy || wx.data) return;
-  wx={data:null,err:null,busy:true,at:null}; renderWx(); setStatus("busy",t().wxLoading);
+  /* Switching field mid-fetch replaces wx. The answer for the old field used
+     to be written into the new field's state, and because wx.data was then
+     set, the new field never fetched its own weather. */
+  const mine = wx = {data:null,err:null,busy:true,at:null}; renderWx(); setStatus("busy",t().wxLoading);
   try{
-    wx.data=await fetchWeather(); wx.busy=false;
-    wx.at=new Date().toLocaleString(lang==="zh"?"zh-Hans":lang==="ms"?"ms-MY":"en-GB",{hour12:false});
-    wxHour=nowHourIndex(wx.data.j.hourly); wxScrollPending=true;
+    const d = await fetchWeather();
+    if(wx!==mine) return;
+    mine.data=d; mine.busy=false;
+    mine.at=new Date().toLocaleString(lang==="zh"?"zh-Hans":lang==="ms"?"ms-MY":"en-GB",{hour12:false});
+    wxHour=nowHourIndex((d.j.hourly||{}).time||[], d.j.utc_offset_seconds); wxScrollPending=true;
     setStatus("ok",t().loaded);
-  }catch(e){ wx.busy=false; wx.err=e.message; setStatus("bad",e.message); }
+  }catch(e){ if(wx!==mine) return; mine.busy=false; mine.err=e.message; setStatus("bad",e.message); }
   renderWx();
 }
 
@@ -1222,8 +1312,8 @@ document.getElementById("sheetX").onclick=closeSheet;
 
 /* ===================== helpers ===================== */
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const isoAgo=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const isoMonthsAgo=n=>{const d=new Date();d.setMonth(d.getMonth()-n);return d.toISOString().slice(0,10);};
+const isoAgo=n=>ymd(new Date(Date.now()-n*864e5));
+const isoMonthsAgo=n=>{const d=new Date();d.setMonth(d.getMonth()-n);return ymd(d);};
 const $=id=>document.getElementById(id);
 
 /* ===================== chrome render ===================== */
@@ -1235,7 +1325,8 @@ function applyTheme(){
 }
 $("themeBtn").onclick=()=>{theme=theme==="dark"?"light":"dark";LS.set("os.theme", theme);applyTheme();if(view!=="map"&&view!=="wx")renderPage();else renderWx();};
 $("langBtn").onclick=()=>{lang=LANGS[(LANGS.indexOf(lang)+1)%LANGS.length];LS.set("os.lang", lang);
-  document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];renderAll();};
+  document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];renderAll();
+  if(view==="map") applyLayer();};
 
 function renderTop(){
   $("langBtn").textContent=LL[lang];
@@ -1246,6 +1337,10 @@ function renderTop(){
   $("layerName").textContent=t().lyr[layerKey];
   $("srIn").placeholder=t().srchPh;
   $("searchBtn").title=t().srch;
+  const lab={searchBtn:t().srch, langBtn:t().langL, themeBtn:t().themeL, btnUndo:t().undo,
+             btnCancel:t().drawCancel, btnLoc:t().locMe, btnRadar:t().wxRadar, btnInfo:t().srcTitle,
+             srClose:t().close, sheetX:t().close, lyrMsgX:t().close};
+  for(const id in lab) $(id).setAttribute("aria-label", lab[id]);
 }
 function renderNav(){
   const ks=["map","fields","trend","wx","set"], icn={map:"map",fields:"fields",trend:"trend",wx:"wx",set:"set"};
@@ -1311,7 +1406,33 @@ function openLayerSheet(){
     ${isSat(layerKey)&&activeField()?satControls():""}`);
   bindSheet();
 }
+/* The legend is drawn from the same stops as the scripts in Settings, so the
+   note there ("the legend colours are drawn from these scripts") is true. It
+   used to be five hand-picked colours that matched neither, reused for
+   productivity, and moisture had none at all. */
+function rampHtml(stops, lo, hi){
+  const a = stops[0][0], b = stops[stops.length-1][0];
+  const g = stops.map(([v,c])=>`${c} ${((v-a)/(b-a)*100).toFixed(1)}%`).join(",");
+  return `<div class="ramp" style="background:linear-gradient(90deg,${g})"></div>
+    <div class="ramp-lab"><span>${lo} · ${a}</span><span>${hi} · ${b}</span></div>`;
+}
+function legendHtml(){
+  if(layerKey==="NDVI")  return rampHtml(NDVI_STOPS, t().rampLo, t().rampHi);
+  if(layerKey==="MOIST") return rampHtml(NDMI_STOPS, t().moistLo, t().moistHi);
+  if(layerKey==="PROD")  return `<div class="ramp">${PROD_CLASSES.map(c=>
+      `<i style="background:rgb(${c.map(v=>Math.round(v*255)).join(",")})"></i>`).join("")}</div>
+    <div class="ramp-lab"><span>${t().rampLo}</span><span>${t().rampHi}</span></div>`;
+  return "";
+}
 function satControls(){
+  /* Productivity's three-year range and cloud filter live in the CDSE layer,
+     and applyLayer deliberately sends it neither — so date, window and cloud
+     controls here would move nothing. Show it only what applies to it. */
+  if(layerKey==="PROD") return `<div class="card" style="margin-top:18px">
+    <h3>${t().satTitle}</h3>${legendHtml()}
+    <p class="sub" style="margin-top:12px">${t().satNote}</p>
+    <p class="src">${t().satSrc}</p></div>
+    <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`;
   return `<div class="card" style="margin-top:18px">
     <h3>${t().satTitle}</h3>
     <label class="f">${t().satDate}</label>
@@ -1331,10 +1452,7 @@ function satControls(){
     ${cloudAny?"":`
       <label class="f">${t().maxcc} — <span id="satCCLab">${cfg.maxcc}%</span></label>
       <input type="range" id="satCC" min="5" max="90" step="5" value="${cfg.maxcc}">`}
-    ${(layerKey==="NDVI"||layerKey==="PROD")?`
-      <div class="ramp"><i style="background:#A0522D"></i><i style="background:#D4A72C"></i>
-      <i style="background:#9ACD32"></i><i style="background:#3CB44B"></i><i style="background:#0B5B2A"></i></div>
-      <div class="ramp-lab"><span>${t().rampLo}</span><span>${t().rampHi}</span></div>`:""}
+    ${legendHtml()}
     <p class="sub" style="margin-top:12px">${t().satNote}</p>
     <p class="src">${t().satSrc}</p></div>
     <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`;
@@ -1434,6 +1552,7 @@ function drawSetChrome(){
   b.classList.toggle("on", drawing);
   b.innerHTML = drawing ? DONE_ICON : DRAW_ICON;
   b.title = drawing ? t().drawStart : t().addField;
+  b.setAttribute("aria-label", b.title);
   b.hidden = view!=="map" || (!drawing && fields.length>=MAX_FIELDS);
   $("btnUndo").hidden   = !drawing || view !== "map";
   $("btnCancel").hidden = !drawing || view !== "map";
@@ -1451,8 +1570,9 @@ function drawBegin(){
 function drawEnd(save){
   if(save){
     if(draftPts.length < 3){ setStatus("bad", t().drawMin); return; }
-    const name = prompt(t().newFieldQ, `${t().field} ${fields.length+1}`);
-    if(name){
+    const name = (prompt(t().newFieldQ, `${t().field} ${fields.length+1}`) || "").trim();
+    if(!name) setStatus("ok", t().drawGone);
+    else {
       const ring = draftPts.map(p=>[+p[1].toFixed(6), +p[0].toFixed(6)]); ring.push(ring[0]);
       const f = {id:Date.now().toString(36), name, ring};
       fields.push(f); activeId = f.id; saveFields(); setStatus("ok", t().saved);
@@ -1517,7 +1637,7 @@ async function srRun(){
       b.onclick = ()=>{ const x = rows[+b.dataset.i]; srGo(x.lat, x.lon, x.bb); };
     });
   }catch(e){
-    srMsg(t().srchFail + (e.message||e));
+    srMsg(t().srchFail + esc(e.message||e));
   }finally{ srBusy = false; }
 }
 
@@ -1691,7 +1811,7 @@ function renderWx(){
   const nz=v=>(v==null||isNaN(v))?0:v;
   const mm=nz(h.precipitation[i]), pp=h.precipitation_probability[i]??null, tp=nz(h.temperature_2m[i]);
   const ws=nz(h.wind_speed_10m[i]), wd=nz(h.wind_direction_10m[i]), code=h.weather_code[i]??0;
-  const nowI=nowHourIndex(h);
+  const nowI=nowHourIndex(h.time, wx.data.j.utc_offset_seconds);
 
   $("wxCard").innerHTML=`
     <span class="col"><span class="big">${Math.round(tp)}°</span><span class="lab">${wcLabel(code)}</span></span>
@@ -1720,7 +1840,7 @@ function renderWx(){
   // badge on the field
   const [lon,lat]=ringCentroid(f.ring);
   const html=`<div class="wxpin"><div class="wxbadge"><span class="t">${wcIcon(code,mm)}${Math.round(tp)}°</span>
-    <span class="w">${ws.toFixed(0)} ${u.wind_speed_10m} <span style="display:inline-block;transform:rotate(${(wd+180)%360}deg)">↑</span></span></div>
+    <span class="w">${ws.toFixed(0)} ${esc(u.wind_speed_10m||"")} <span style="display:inline-block;transform:rotate(${(wd+180)%360}deg)">↑</span></span></div>
     <div class="stem"></div><div class="nm">${esc(f.name)}</div></div>`;
   if(wxMarker) map.removeLayer(wxMarker);
   wxMarker=L.marker([lat,lon],{interactive:false,
@@ -1728,7 +1848,19 @@ function renderWx(){
 }
 function wxDetailSheet(){
   if(!wx.data) return;
-  const{j,lat,lon}=wx.data,d=j.daily,h=j.hourly,i=Math.min(wxHour,h.time.length-1);
+  /* Open-Meteo leaves out any variable it has nothing for. renderWx was made
+     to cope; this sheet still indexed them directly and threw. */
+  const{j,lat,lon}=wx.data, d0=j.daily||{}, h0=j.hourly||{}, units=j.hourly_units||{};
+  const arr=(o,n)=>Array.isArray(o[n])?o[n]:[];
+  const h={time:arr(h0,"time"),temperature_2m:arr(h0,"temperature_2m"),
+           relative_humidity_2m:arr(h0,"relative_humidity_2m"),precipitation:arr(h0,"precipitation"),
+           wind_speed_10m:arr(h0,"wind_speed_10m"),soil_moisture_0_to_1cm:h0.soil_moisture_0_to_1cm,
+           soil_moisture_1_to_3cm:h0.soil_moisture_1_to_3cm,soil_moisture_3_to_9cm:h0.soil_moisture_3_to_9cm,
+           soil_moisture_9_to_27cm:h0.soil_moisture_9_to_27cm,soil_moisture_27_to_81cm:h0.soil_moisture_27_to_81cm};
+  const d={time:arr(d0,"time"),precipitation_sum:arr(d0,"precipitation_sum"),
+           et0_fao_evapotranspiration:arr(d0,"et0_fao_evapotranspiration")};
+  if(!h.time.length) return;
+  const i=Math.max(0,Math.min(wxHour,h.time.length-1));
   const g=v=>(v==null||isNaN(v))?0:v;
   const sm=[["0–1 cm",h.soil_moisture_0_to_1cm?.[i]],["1–3 cm",h.soil_moisture_1_to_3cm?.[i]],
     ["3–9 cm",h.soil_moisture_3_to_9cm?.[i]],["9–27 cm",h.soil_moisture_9_to_27cm?.[i]],
@@ -1738,7 +1870,7 @@ function wxDetailSheet(){
       <div class="stat"><b>${Math.round(g(h.temperature_2m[i]))}°</b><small>${t().wxTempL}</small></div>
       <div class="stat"><b>${h.relative_humidity_2m[i]??"—"}%</b><small>${t().hum}</small></div>
       <div class="stat"><b>${g(h.precipitation[i]).toFixed(1)}</b><small>${t().wxAmt} mm</small></div>
-      <div class="stat"><b>${g(h.wind_speed_10m[i]).toFixed(0)}</b><small>${t().wxWind} ${j.hourly_units.wind_speed_10m}</small></div>
+      <div class="stat"><b>${g(h.wind_speed_10m[i]).toFixed(0)}</b><small>${t().wxWind} ${esc(units.wind_speed_10m||"")}</small></div>
     </div>
     <p class="sub">${hhmm(h.time[i])} · ${h.time[i].slice(0,10)}</p>
     <div class="card" style="margin-top:14px"><h3>${t().rain14}</h3>
@@ -1775,13 +1907,16 @@ function evaluatePixel(s){
   return [c[0], c[1], c[2], 1];
 }`;
 
+const NDVI_STOPS = [[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]];
+const NDMI_STOPS = [[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]];
+/* lowest to highest multi-year mean NDVI, as RGB 0..1 */
+const PROD_CLASSES = [[0.63,0.32,0.18],[0.83,0.65,0.17],[0.60,0.80,0.20],[0.24,0.70,0.29],[0.04,0.36,0.16]];
+
 const NDVI_SCRIPT = IDX_SCRIPT("NDVI", ["B04","B08","SCL","dataMask"],
-  "(s.B08 - s.B04) / (s.B08 + s.B04)",
-  [[0.0,"#A94E22"],[0.2,"#D9A520"],[0.4,"#C6D62B"],[0.6,"#4FB84C"],[0.8,"#0B5C29"],[1.0,"#063B1A"]]);
+  "(s.B08 - s.B04) / (s.B08 + s.B04)", NDVI_STOPS);
 
 const NDMI_SCRIPT = IDX_SCRIPT("NDMI", ["B08","B11","SCL","dataMask"],
-  "(s.B08 - s.B11) / (s.B08 + s.B11)",
-  [[-0.5,"#F2E6C8"],[-0.2,"#D9C08A"],[0.0,"#9FD8F0"],[0.3,"#2E9BE0"],[0.6,"#1140C4"],[1.0,"#5B1FB0"]]);
+  "(s.B08 - s.B11) / (s.B08 + s.B11)", NDMI_STOPS);
 
 const PROD_SCRIPT=`//VERSION=3
 // Multi-year mean NDVI -> productivity zones
@@ -1800,11 +1935,11 @@ function evaluatePixel(samples){
   }
   if(n<5) return [0,0,0,0];
   var m=sum/n;
-  if(m<0.30) return [0.63,0.32,0.18,1];
-  if(m<0.45) return [0.83,0.65,0.17,1];
-  if(m<0.60) return [0.60,0.80,0.20,1];
-  if(m<0.72) return [0.24,0.70,0.29,1];
-  return [0.04,0.36,0.16,1];
+  if(m<0.30) return [${PROD_CLASSES[0]},1];
+  if(m<0.45) return [${PROD_CLASSES[1]},1];
+  if(m<0.60) return [${PROD_CLASSES[2]},1];
+  if(m<0.72) return [${PROD_CLASSES[3]},1];
+  return [${PROD_CLASSES[4]},1];
 }`;
 function pgSet(){
   return `<div class="brand"><img src="./favicon.png" alt="" width="40" height="40"><b>${APP_NAME}</b></div>
@@ -1822,7 +1957,7 @@ function pgSet(){
     <p class="sub" style="margin-top:10px">${t().setLayerNote}</p></div>
   <div class="card"><h3>${t().setT3}</h3>
     <label class="f">Client ID</label><input type="text" id="cCid" value="${esc(cfg.clientId)}" autocomplete="off">
-    <label class="f">Client Secret</label><input type="password" id="cSec" autocomplete="off" value="${esc(cfg.clientSecret)}" autocomplete="off">
+    <label class="f">Client Secret</label><input type="password" id="cSec" autocomplete="off" value="${esc(cfg.clientSecret)}">
     <button class="btn wide alt" id="secShow" style="margin-top:8px">${t().secShow}</button>
     <label class="f">${t().setProxy}</label><input type="text" id="cPrx" value="${esc(cfg.proxy)}" placeholder="https://your-worker.workers.dev/token">
     <div class="msg err">${t().setSecWarn}</div></div>
@@ -1845,7 +1980,7 @@ function pgSet(){
     <textarea id="prodScript" readonly>${esc(PROD_SCRIPT)}</textarea>
     <button class="btn wide alt" id="copyProd" style="margin-top:10px">${t().copy}</button></div>
   <div class="card"><h3>${t().setT8}</h3>
-    <p class="sub">${t().idxNote}</p>
+    <p class="sub">${t().scriptNote}</p>
     <label class="f" style="margin-top:12px">VEGETATION_INDEX</label>
     <textarea id="ndviScript" readonly>${esc(NDVI_SCRIPT)}</textarea>
     <button class="btn wide alt" id="copyNdvi" style="margin-top:10px">${t().copy}</button>
@@ -1873,7 +2008,7 @@ async function probeLayer(name){
   if(name !== cfg.layerProd){
     const to = satDate;
     const from = new Date(new Date(to).getTime()-satWin*864e5).toISOString().slice(0,10);
-    q.set("time", from+"/"+to); q.set("maxcc", String(cfg.maxcc));
+    q.set("time", from+"/"+to); q.set("maxcc", String(effMaxcc()));
   }
   let r;
   const t0 = Date.now();
@@ -1884,13 +2019,10 @@ async function probeLayer(name){
   if(r.ok && ct.indexOf("image")===0){
     const b = await r.blob();
     /* A valid but empty PNG is the "no clear scene" case, not a failure. */
-    return {name, ok:true, ms, bytes:b.size, blank:b.size<900};
+    return {name, ok:true, ms, bytes:b.size, blank:await isBlankImage(b)};
   }
-  const body = (await r.text()).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  const ra = r.headers.get("retry-after");
-  const extra = r.status===429 ? ` · retry-after ${ra||"?"}` : "";
-  return {name, ok:false, ms, status:r.status,
-          why:`HTTP ${r.status}${extra} · ${body.slice(0,200)}`};
+  return Object.assign({name, ok:false, ms},
+    wmsFailure(r.status, await r.text(), r.headers.get("retry-after")));
 }
 
 /* ===================== page bindings ===================== */
@@ -1906,17 +2038,21 @@ function bindPage(){
     fields=fields.filter(f=>f.id!==activeId); activeId=fields[0]?fields[0].id:null;
     saveFields(); onFieldChange(); renderPage(); renderTop();
   };
-  if($("idxPick")) $("idxPick").onchange=e=>{idxState.index=e.target.value;renderPage();};
-  if($("idxMonths")) $("idxMonths").onchange=e=>{idxState.months=+e.target.value;};
+  /* The chart below belongs to the index and period it was fetched for. Left
+     in place after a change, NDVI numbers sat under an NDRE heading. */
+  if($("idxPick")) $("idxPick").onchange=e=>{idxState.index=e.target.value;series={rows:[],err:null,busy:false};renderPage();};
+  if($("idxMonths")) $("idxMonths").onchange=e=>{idxState.months=+e.target.value;series={rows:[],err:null,busy:false};renderPage();};
   if($("goSeries")) $("goSeries").onclick=async()=>{
-    series={rows:[],err:null,busy:true}; renderPage(); setStatus("busy",t().fetching);
+    const mine = series = {rows:[],err:null,busy:true}; renderPage(); setStatus("busy",t().fetching);
     try{
-      series.rows=await fetchSeries(idxState.index,isoMonthsAgo(idxState.months),isoAgo(0));
-      series.busy=false;
-      if(!series.rows.length){series.err=t().noClear;setStatus("bad",t().noClear);}
-      else setStatus("ok",t().got+series.rows.length);
-    }catch(e){series.busy=false;series.err=e.message;setStatus("bad",e.message);}
-    renderPage();
+      const rows=await fetchSeries(idxState.index,isoMonthsAgo(idxState.months),isoAgo(0));
+      if(series!==mine) return;            // field or index changed meanwhile
+      mine.rows=rows; mine.busy=false;
+      if(!rows.length){mine.err=t().noClear;setStatus("bad",t().noClear);}
+      else setStatus("ok",t().got+rows.length);
+    }catch(e){ if(series!==mine) return; mine.busy=false;mine.err=e.message;setStatus("bad",e.message);}
+    /* only this page: re-rendering Settings would wipe what is being typed */
+    if(view==="trend") renderPage();
   };
   if($("saveCfg")) $("saveCfg").onclick=()=>{
     /* Clearing a field means "use the built-in value", not "make it blank".
@@ -1946,7 +2082,7 @@ function bindPage(){
     const blob=new Blob([$("bkOut").value],{type:"application/json"});
     const a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
-    a.download="ndvi-fields-"+new Date().toISOString().slice(0,10)+".json";
+    a.download="ndvi-fields-"+ymd(new Date())+".json";
     document.body.appendChild(a); a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
   };
@@ -1954,10 +2090,19 @@ function bindPage(){
     const r=parseBackup($("bkIn").value);
     if(!r){ $("bkOut2").innerHTML=`<div class="msg err">${t().bkBad}</div>`; return; }
     const have=new Set(fields.map(f=>f.id));
-    let n=0;
-    for(const f of r){ if(!have.has(f.id)){ fields.push(f); have.add(f.id); n++; } }
-    if(n){ saveFields(); drawFields(); renderTop(); }
-    $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}</div>`;
+    let n=0, over=0;
+    for(const f of r){
+      if(have.has(f.id)) continue;
+      /* restoring used to be a way round the two-field limit */
+      if(fields.length>=MAX_FIELDS){ over++; continue; }
+      fields.push(f); have.add(f.id); n++;
+    }
+    if(n){
+      if(!activeField()){ activeId=fields[0].id; applyLayer(); }
+      saveFields(); drawFields(); renderTop();
+      $("bkOut").value=JSON.stringify({v:1,fields});
+    }
+    $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}${over?t().bkOver.replace("{n}",over):""}</div>`;
     $("bkIn").value="";
   };
   const copyBtn=(id,txt)=>{ const b=$(id); if(!b) return;
