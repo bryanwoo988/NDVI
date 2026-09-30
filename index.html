@@ -133,9 +133,6 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
   background:var(--bg);overflow-y:auto;
   -webkit-overflow-scrolling:touch;padding:calc(16px + var(--st)) 16px calc(var(--above) + 24px)}
 #page[hidden]{display:none}
-.brand{display:flex;align-items:center;gap:11px;margin:2px 0 14px}
-.brand img{border-radius:10px;display:block}
-.brand b{font-size:19px;font-weight:800;letter-spacing:-.02em}
 .h1{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:4px 0 2px}
 .h1sub{color:var(--mute);font-size:13.5px;margin:0 0 18px}
 
@@ -288,6 +285,29 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frow .tx small{color:var(--mute);font-size:13px}
 .frow.sel{background:var(--surf);border-radius:18px;border-bottom-color:transparent}
+
+/* ---------- update bar ---------- */
+.upd-bar{position:fixed;left:12px;right:12px;bottom:calc(var(--navh) + 10px);z-index:900;
+  display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:18px;
+  background:var(--text);color:var(--bg);font-size:14.5px;font-weight:700;box-shadow:var(--sh);
+  transform:translateY(calc(100% + var(--navh) + 40px));transition:transform .35s cubic-bezier(.2,.8,.3,1)}
+.upd-bar.on{transform:none}
+.upd-bar span{flex:1;min-width:0}
+.upd-go{min-height:40px;padding:0 16px;border-radius:13px;background:var(--accent);color:var(--accent-ink);
+  font-weight:800;font-size:14px}
+.upd-x{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;color:inherit}
+.upd-x svg.i{width:18px;height:18px;stroke-width:2.2}
+
+/* ---------- settings: about / share ---------- */
+.about{text-align:center;padding:4px 0 6px;margin-bottom:6px}
+.about-logo{display:block;margin:0 auto 10px;border-radius:16px;box-shadow:var(--sh-s)}
+.about-name{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.about-ver{font-size:12.5px;color:var(--mute);margin-top:2px}
+.credit{margin:10px 0 16px;font-size:15px;font-weight:600;letter-spacing:.3px}
+/* white all round the code: scanners need the quiet zone, and dark mode must not invert it */
+.qr{display:block;width:200px;height:200px;margin:0 auto 14px;padding:10px;border-radius:16px;background:#fff}
+.share-cap{margin:0 0 4px;font-size:14.5px;line-height:1.5}
+.share-url{margin:0 0 14px;font-size:13px;color:var(--mute);word-break:break-all}
 </style>
 </head>
 <body>
@@ -339,6 +359,12 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 
 <nav id="nav"></nav>
 
+<div class="upd-bar" id="updBar" role="status" aria-live="polite">
+  <span id="updText"></span>
+  <button class="upd-go" id="updGo"></button>
+  <button class="upd-x" id="updLater"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+
 <div id="scrim"></div>
 <div id="sheet">
   <div id="sheetGrab"><div class="bar"></div></div>
@@ -346,6 +372,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
   <div id="sheetBody"></div>
 </div>
 
+<script src="./updatelogic.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
   integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="anonymous"></script>
 <script>
@@ -400,6 +427,9 @@ zh:{
  mBlank:"这个条件下没有可用影像 —— 多半是被云挡住了。",
  mBlankFix:"改成有云也显示",
  moistLo:"干", moistHi:"湿",
+ updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
+ qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
+ shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
  bkOver:"；已达两块上限，另有 {n} 块没加入",
  undo:"撤销上一个点", locMe:"定位到我", themeL:"切换深色 / 浅色", langL:"切换语言",
  mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
@@ -505,6 +535,9 @@ en:{
  mBlank:"No usable scene for these settings — most likely cloud cover.",
  mBlankFix:"Show it with clouds",
  moistLo:"Dry", moistHi:"Wet",
+ updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
+ qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
+ shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
  bkOver:"; {n} more not added (two-field limit)",
  undo:"Undo last point", locMe:"Show my location", themeL:"Switch dark / light", langL:"Change language",
  mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
@@ -610,6 +643,9 @@ ms:{
  mBlank:"Tiada imej sesuai untuk tetapan ini — kemungkinan besar dilindungi awan.",
  mBlankFix:"Tunjuk walaupun berawan",
  moistLo:"Kering", moistHi:"Basah",
+ updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
+ qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
+ shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
  bkOver:"; {n} lagi tidak ditambah (had dua kebun)",
  undo:"Buang titik terakhir", locMe:"Tunjuk lokasi saya", themeL:"Tukar gelap / cerah", langL:"Tukar bahasa",
  mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
@@ -770,7 +806,13 @@ const saveCfg = ()=>{
   for(const k in cfg) if(cfg[k]!=="" && cfg[k]!==CFG_BASE[k]) own[k] = cfg[k];
   LS.set("os.cfg", JSON.stringify(own));
 };
-const BUILD = "2026-09-27-l";
+/* Which build this is: index.html's own Last-Modified, which GitHub Pages
+   sets on every deploy. Replaces a hand-typed build label that went stale. */
+const REVISION = (()=>{ const d=new Date(document.lastModified);
+  return isFinite(d) ? ymd(d)+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0") : ""; })();
+/* Where the app lives. qr.svg encodes exactly this address — if it ever
+   changes, run: node tools/make-qr.mjs <new url> */
+const APP_URL = "https://bryanwoo988.github.io/NDVI/";
 let advOpen = false;
 /* Diagnostic only. iOS standalone hands us a webview shorter than the screen
    (761 of 812 on the test device) and changes its mind after the keyboard
@@ -805,7 +847,7 @@ function layoutDiag(){
   probe.remove();
   const standalone = (navigator.standalone===true) || matchMedia("(display-mode: standalone)").matches;
   const mr=$("map").getBoundingClientRect();
-  return [["build",BUILD],
+  return [["build",REVISION],
           ["measured gap",getComputedStyle(document.documentElement).getPropertyValue("--gap").trim()],
           ["standalone",String(standalone)],
           ["innerHeight",innerHeight+" px"],
@@ -1942,7 +1984,16 @@ function evaluatePixel(samples){
   return [${PROD_CLASSES[4]},1];
 }`;
 function pgSet(){
-  return `<div class="brand"><img src="./favicon.png" alt="" width="40" height="40"><b>${APP_NAME}</b></div>
+  return `<div class="about">
+    <img class="about-logo" src="./icon-192.png" alt="" width="64" height="64">
+    <div class="about-name">${APP_NAME}</div>
+    <div class="about-ver">${t().version} ${esc(REVISION)}</div>
+    <p class="credit">Created by Bryan Woo</p>
+    <img class="qr" src="./qr.svg" alt="${esc(t().qrAlt)}" width="200" height="200">
+    <p class="share-cap">${t().qrCap}</p>
+    <p class="share-url">${esc(APP_URL.replace(/^https:\/\//,"").replace(/\/$/,""))}</p>
+    <button class="btn wide alt" id="shareApp">${t().shareApp}</button>
+  </div>
   <h1 class="h1">${t().setTitle}</h1><p class="h1sub">${t().setSub}</p>
   <div class="card"><h3>${t().setT1}</h3>
     <ol class="plain">${t().setSteps.map(s=>`<li>${s}</li>`).join("")}</ol>
@@ -2070,6 +2121,18 @@ function bindPage(){
   if($("secShow")) $("secShow").onclick = ()=>{
     const el=$("cSec"); el.type = el.type==="password" ? "text" : "password";
   };
+  /* for someone not standing next to you: the phone's own share sheet, or the
+     link copied where there is none */
+  if($("shareApp")) $("shareApp").onclick = async()=>{
+    if(navigator.share){
+      try{ await navigator.share({title:APP_NAME, text:t().shareText, url:APP_URL}); }catch(_){}
+      return;
+    }
+    const b=$("shareApp");
+    try{ await navigator.clipboard.writeText(APP_URL); b.textContent=t().linkCopied; }
+    catch(_){ b.textContent=APP_URL; }
+    setTimeout(()=>{ b.textContent=t().shareApp; }, 2400);
+  };
   if($("advOn"))  $("advOn").onclick  = ()=>{ advOpen=true;  renderPage(); };
   if($("advOff")) $("advOff").onclick = ()=>{ advOpen=false; renderPage(); };
   if($("bkCopy")) $("bkCopy").onclick=async()=>{
@@ -2168,15 +2231,112 @@ function bindPage(){
   };
 }
 
+/* ===================== updates =====================
+   The page asks the server which build is live when it opens, whenever it
+   comes back to the screen, and every quarter hour in use; updatelogic.js
+   decides whether to apply it at once or offer it. The service worker
+   revalidates every file with the server, so a reload always brings the new
+   build. Same behaviour as CompareCast. */
+let visibleSince=Date.now(), updateReady=null, lastUpdateCheck=0;
+/* the revision of index.html live on the server */
+async function liveRevision(){
+  try{
+    const r=await fetch("./index.html",{method:"HEAD",cache:"no-cache"});
+    return r.ok ? r.headers.get("last-modified") : null;
+  }catch(_){ return null; }
+}
+async function checkForUpdate(opts){
+  const asked=!!(opts && opts.asked);
+  if(!navigator.onLine) return false;
+  if(!asked && Date.now()-lastUpdateCheck<60e3) return !!updateReady;
+  lastUpdateCheck=Date.now();
+  /* the worker too, so it holds the new files by the time we reload */
+  try{
+    const reg="serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+    if(reg) reg.update().catch(()=>{});
+  }catch(_){}
+  /* document.lastModified is the Last-Modified of the index.html this page is
+     running, whether it came from the network or the offline copy */
+  const live=await liveRevision();
+  if(!newerRevision(document.lastModified, live)) return false;
+  updateReady=live;
+  actOnUpdate(asked);
+  return true;
+}
+/* someone in the middle of something: a sheet or search open, a field being
+   drawn, a box being typed in, or on Settings where typed values are unsaved */
+function appBusy(){
+  const a=document.activeElement;
+  return sheetEl.classList.contains("on") || drawing || $("searchWrap").classList.contains("on")
+    || view==="set" || series.busy || !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+}
+function actOnUpdate(asked){
+  if(!updateReady) return;
+  const what=updateAction({hidden:document.visibilityState!=="visible",
+                           sinceVisibleMs:Date.now()-visibleSince, busy:appBusy(), asked:!!asked});
+  if(what==="apply") applyUpdate(false);
+  else if(what==="banner") showUpdateBar();
+}
+/* reload into the new build, back where the user was. An automatic reload is
+   tried once per version per ten minutes (updatelogic.js: no reload loops);
+   the user's own tap always goes through. */
+function applyUpdate(byUser){
+  let tried=null;
+  try{ tried=JSON.parse(sessionStorage.getItem("ndvi:tried")||"null"); }catch(_){}
+  if(byUser!==true && !mayAutoReload(tried, updateReady, Date.now())){ showUpdateBar(); return; }
+  try{ sessionStorage.setItem("ndvi:tried", JSON.stringify({v:updateReady, at:Date.now()})); }catch(_){}
+  try{
+    const c=map.getCenter();
+    sessionStorage.setItem("ndvi:resume", JSON.stringify({view, a:activeId, c:[c.lat,c.lng], z:map.getZoom()}));
+  }catch(_){}
+  location.reload();
+}
+function showUpdateBar(){
+  const bar=$("updBar");
+  if(!bar || bar.classList.contains("on")) return;
+  $("updText").textContent=t().updReady;
+  $("updGo").textContent=t().updNow;
+  $("updLater").setAttribute("aria-label", t().updLater);
+  bar.classList.add("on");
+}
+$("updGo").onclick=()=>applyUpdate(true);
+/* "later" only hides the bar: the update still lands the next time the app
+   comes back to the screen */
+$("updLater").onclick=()=>$("updBar").classList.remove("on");
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState!=="visible") return;
+  visibleSince=Date.now();
+  if(updateReady) actOnUpdate(); else checkForUpdate();
+});
+setInterval(()=>{ if(document.visibilityState==="visible") checkForUpdate(); }, 15*60e3);
+
+/* After an update's reload: the same page, field and map position as before. */
+function resumeAfterUpdate(){
+  let r=null;
+  try{ r=JSON.parse(sessionStorage.getItem("ndvi:resume")||"null"); sessionStorage.removeItem("ndvi:resume"); }catch(_){}
+  if(!r) return;
+  if(r.a && r.a!==activeId && fields.some(f=>f.id===r.a)){ activeId=r.a; drawFields(false); applyLayer(); }
+  if(Array.isArray(r.c) && isFinite(r.c[0]) && isFinite(r.c[1]) && isFinite(r.z))
+    map.setView(r.c, r.z, {animate:false});
+  if(["map","fields","trend","wx","set"].includes(r.view)) view=r.view;
+  renderAll();
+}
+
 /* ===================== boot ===================== */
 document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];
 if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 measureGap();
 applyTheme(); applyLayer(); drawFields(); renderAll();
+resumeAfterUpdate();
+/* a page served from the offline copy may be older than the live build */
+setTimeout(checkForUpdate, 1500);
 
-
-if("serviceWorker" in navigator)
-  addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+if("serviceWorker" in navigator && location.protocol!=="file:"){
+  /* updateViaCache 'none': the browser's own update checks go to the server
+     for sw.js and what it imports, never to its HTTP cache */
+  const reg=()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{});
+  if(document.readyState==="complete") reg(); else addEventListener("load", reg);
+}
 </script>
 </body>
 </html>
