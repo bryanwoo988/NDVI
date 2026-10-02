@@ -124,3 +124,11 @@ test('live data is never intercepted', async () => {
     assert.equal(await w.fire('fetch', {request: new Request(u)}), undefined, u);
   assert.equal(await w.fire('fetch', {request: new Request(BASE, {method: 'POST', body: 'x'})}), undefined, 'POST');
 });
+
+test('activate leaves the other apps on bryanwoo988.github.io alone', async () => {
+  const w = makeWorker({net: async () => ok('x')});
+  const others = ['opwiki-936c9276a0', 'opb-shell', 'pw-shell', 'pw-notice', 'meteo-0123456789'];
+  for (const n of [...others, 'ndvi-shell-v33', 'onesoil-shell-v33', 'ndvi-shell']) await (await w.scope.caches.open(n)).put(BASE, ok('x'));
+  await w.fire('activate');
+  assert.deepEqual([...w.store.keys()].sort(), ['ndvi-shell', ...others].sort());
+});

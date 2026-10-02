@@ -57,7 +57,10 @@ self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     /* the versioned caches of earlier builds ('ndvi-shell-v33', 'onesoil-…') go */
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== SHELL).map(k => caches.delete(k)));
+    /* only our own: every app on bryanwoo988.github.io shares this origin's
+       Cache Storage, and the others' offline copies must survive */
+    const mine = k => k.startsWith('ndvi-') || k.startsWith('onesoil-');
+    await Promise.all(keys.filter(k => mine(k) && k !== SHELL).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
