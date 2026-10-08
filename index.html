@@ -501,7 +501,7 @@ zh:{
        ["产能分区","同上，多时相脚本算多年 NDVI 平均"],
        ["天气 / ET₀ / 土壤含水","Open-Meteo 数值天气模式"],
        ["卫星底图","Esri World Imagery"],
-       ["街道底图","Esri World Street Map / Dark Gray Canvas"],
+       ["街道底图","Esri World Street Map"],
        ["地块边界","你自己画的，只存在这台手机，不上传"]],
  srcT2:"这个 App 不会做的事",
  srcNot:["不编数据。取不到就报错，绝不给一条假曲线。","不插值补空。云遮住的日子就是空的。",
@@ -610,7 +610,7 @@ en:{
        ["Productivity zones","Same, multi-temporal script averaging several years of NDVI"],
        ["Weather / ET₀ / soil water","Open-Meteo numerical weather model"],
        ["Satellite basemap","Esri World Imagery"],
-       ["Street basemap","Esri World Street Map / Dark Gray Canvas"],
+       ["Street basemap","Esri World Street Map"],
        ["Field boundaries","Drawn by you, stored only on this device, never uploaded"]],
  srcT2:"What this app will not do",
  srcNot:["No invented data. A failed fetch gives you the error, never a fake curve.","No gap filling. Clouded days stay empty.",
@@ -719,7 +719,7 @@ ms:{
        ["Zon produktiviti","Sama, skrip pelbagai masa purata NDVI beberapa tahun"],
        ["Cuaca / ET₀ / air tanah","Model cuaca berangka Open-Meteo"],
        ["Peta asas satelit","Esri World Imagery"],
-       ["Peta asas jalan","Esri World Street Map / Dark Gray Canvas"],
+       ["Peta asas jalan","Esri World Street Map"],
        ["Sempadan kebun","Dilukis oleh anda, disimpan dalam peranti ini sahaja"]],
  srcT2:"Apa yang app ini tidak buat",
  srcNot:["Tiada data rekaan. Kalau gagal, anda dapat ralat, bukan graf palsu.","Tiada isian jurang. Hari berawan kekal kosong.",
@@ -905,17 +905,15 @@ map.attributionControl.setPrefix("");
 const BASES = {
   sat:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {maxZoom:19,maxNativeZoom:19,attribution:"Esri, Maxar, Earthstar Geographics"}),
-  /* Street maps are Esri too, as in CompareCast: CARTO's basemaps now want
-     an API key and serve a "key required" placeholder without one. Dark Gray
-     Canvas stops at zoom 16 and is scaled up past that. */
-  light:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19,maxNativeZoom:19,attribution:"Esri"}),
-  dark:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19,maxNativeZoom:16,attribution:"Esri"})
+  /* The same street map as CompareCast, Esri World Street Map, whatever
+     the theme. CARTO's basemaps now want an API key and serve a "key
+     required" placeholder without one. */
+  street:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      {maxZoom:19,attribution:"Tiles © Esri"})
 };
 let curBase=null;
 function swapBase(){
-  const want = layerKey==="STREET" ? (theme==="dark"?BASES.dark:BASES.light) : BASES.sat;
+  const want = layerKey==="STREET" ? BASES.street : BASES.sat;
   if(curBase===want) return;
   if(curBase) map.removeLayer(curBase);
   curBase=want; curBase.addTo(map); curBase.bringToBack();
