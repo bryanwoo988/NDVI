@@ -797,6 +797,13 @@ if(BUILT_IN.instanceId && (!savedCfg.instanceId || savedCfg.instanceId===BUILT_I
 const cfg = Object.assign({}, CFG_BASE, savedCfg);
 let fields = LS.json("os.fields", []);
 if(!Array.isArray(fields)) fields=[];
+/* Valid JSON of the wrong shape (one null, one field without a ring) used to
+   throw inside drawFields at startup and leave a blank, dead map — the good
+   fields with it. Keep every field that can be drawn; drop the rest. */
+{
+  const seen = new Set();
+  fields = fields.map(cleanField).filter(f => f && !seen.has(f.id) && seen.add(f.id));
+}
 let activeId = fields[0]?fields[0].id:null;
 let theme = LS.get("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
 const LAYER_KEYS = ["OFF","TRUE","NDVI","PROD","MOIST","STREET"];
@@ -863,31 +870,32 @@ function layoutDiag(){
 const saveFields = ()=>LS.set("os.fields",JSON.stringify(fields));
 
 /* Accept only what we can actually draw: an id, a name, and a ring of
-   >=3 finite [lon,lat] pairs. Anything else is rejected whole. */
+   >=3 finite [lon,lat] pairs. Returns the cleaned field, or null. */
+function cleanField(f){
+  /* The id goes into an HTML attribute (data-f="…"), so a backup passed
+     around by message must not be able to carry markup in it. */
+  if(!f || typeof f.id!=="string" || !/^[A-Za-z0-9_-]{1,64}$/.test(f.id)) return null;
+  if(typeof f.name!=="string" || !f.name.trim()) return null;
+  if(!Array.isArray(f.ring) || f.ring.length<3) return null;
+  for(const pt of f.ring){
+    if(!Array.isArray(pt) || pt.length<2) return null;
+    const lon=+pt[0], lat=+pt[1];
+    if(!isFinite(lon)||!isFinite(lat)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
+  }
+  /* Closed, as the app draws them. An open ring is a 400 from the
+     Statistical API and loses its last edge in the area and centroid. */
+  const ring=f.ring.map(p=>[+p[0],+p[1]]), a=ring[0], z=ring[ring.length-1];
+  if(a[0]!==z[0] || a[1]!==z[1]) ring.push([a[0],a[1]]);
+  if(ring.length<4) return null;
+  return {id:f.id, name:f.name.trim(), ring};
+}
+/* A backup is rejected whole if any field in it is bad. */
 function parseBackup(txt){
   let j; try{ j=JSON.parse(String(txt).trim()); }catch(_){ return null; }
   const arr = Array.isArray(j) ? j : (j && Array.isArray(j.fields) ? j.fields : null);
   if(!arr || !arr.length) return null;
-  const ok=[];
-  for(const f of arr){
-    /* The id goes into an HTML attribute (data-f="…"), so a backup passed
-       around by message must not be able to carry markup in it. */
-    if(!f || typeof f.id!=="string" || !/^[A-Za-z0-9_-]{1,64}$/.test(f.id)) return null;
-    if(typeof f.name!=="string" || !f.name.trim()) return null;
-    if(!Array.isArray(f.ring) || f.ring.length<3) return null;
-    for(const pt of f.ring){
-      if(!Array.isArray(pt) || pt.length<2) return null;
-      const lon=+pt[0], lat=+pt[1];
-      if(!isFinite(lon)||!isFinite(lat)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
-    }
-    /* Closed, as the app draws them. An open ring is a 400 from the
-       Statistical API and loses its last edge in the area and centroid. */
-    const ring=f.ring.map(p=>[+p[0],+p[1]]), a=ring[0], z=ring[ring.length-1];
-    if(a[0]!==z[0] || a[1]!==z[1]) ring.push([a[0],a[1]]);
-    if(ring.length<4) return null;
-    ok.push({id:f.id, name:f.name.trim(), ring});
-  }
-  return ok;
+  const ok = arr.map(cleanField);
+  return ok.every(Boolean) ? ok : null;
 }
 const activeField = ()=>fields.find(f=>f.id===activeId)||null;
 
@@ -1254,20 +1262,34 @@ function nowHourIndex(times, offsetSec){
     if(Date.parse(times[i]+"Z") - (offsetSec||0)*1000 > n) return Math.max(0,i-1);
   return Math.max(0,times.length-1);
 }
+/* A home-screen app is resumed far more often than relaunched, and weather
+   used to be fetched once per field per session: days later the card still
+   showed that first reply's "now". Past half an hour it is fetched again. */
+const WX_REFRESH_MS = 30*60e3;
 async function ensureWeather(){
-  if(!activeField() || wx.busy || wx.data) return;
+  if(!activeField() || wx.busy || wx.refreshing) return;
+  if(wx.data && Date.now()-wx.ts < WX_REFRESH_MS) return;
   /* Switching field mid-fetch replaces wx. The answer for the old field used
      to be written into the new field's state, and because wx.data was then
-     set, the new field never fetched its own weather. */
-  const mine = wx = {data:null,err:null,busy:true,at:null}; renderWx(); setStatus("busy",t().wxLoading);
+     set, the new field never fetched its own weather.
+     A refresh keeps the old reply on screen until the new one lands, and
+     keeps it if the refresh fails. */
+  const mine = wx.data ? wx : (wx = {data:null,err:null,busy:true,at:null});
+  if(mine.data) mine.refreshing = true; else renderWx();
+  setStatus("busy",t().wxLoading);
   try{
     const d = await fetchWeather();
     if(wx!==mine) return;
-    mine.data=d; mine.busy=false;
+    mine.data=d; mine.busy=false; mine.refreshing=false; mine.err=null; mine.ts=Date.now();
     mine.at=new Date().toLocaleString(lang==="zh"?"zh-Hans":lang==="ms"?"ms-MY":"en-GB",{hour12:false});
     wxHour=nowHourIndex((d.j.hourly||{}).time||[], d.j.utc_offset_seconds); wxScrollPending=true;
     setStatus("ok",t().loaded);
-  }catch(e){ if(wx!==mine) return; mine.busy=false; mine.err=e.message; setStatus("bad",e.message); }
+  }catch(e){
+    if(wx!==mine) return;
+    mine.busy=false; mine.refreshing=false;
+    if(!mine.data) mine.err=e.message;
+    setStatus("bad",e.message);
+  }
   renderWx();
 }
 
@@ -2343,6 +2365,7 @@ $("updLater").onclick=()=>$("updBar").classList.remove("on");
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible") return;
   visibleSince=Date.now();
+  if(view==="wx") ensureWeather();
   if(updateReady) actOnUpdate(); else checkForUpdate();
 });
 setInterval(()=>{ if(document.visibilityState==="visible") checkForUpdate(); }, 15*60e3);
