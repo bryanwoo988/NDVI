@@ -431,7 +431,7 @@ zh:{
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
  shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
- bkOver:"；已达两块上限，另有 {n} 块没加入",
+ bkOver:"；已达 {max} 块上限，另有 {n} 块没加入",
  undo:"撤销上一个点", locMe:"定位到我", themeL:"切换深色 / 浅色", langL:"切换语言",
  mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
  cloudMode:"云层", clearOnly:"只看晴天", anyCloud:"有云也显示",
@@ -439,7 +439,7 @@ zh:{
  clearHint:"只用云量低于上限的影像。资料干净，但多云时可能连续几天空白。",
  anyHint:"不过滤云量，一定给得出最近一张影像。但云和云影会压低数值，别拿来判断田况。",
  lockNoField:"先选一块地才能开这个图层",
- maxTwo:"最多只能画两块地。要加新的，先删掉一块。",
+ maxFields:"最多只能存 {max} 块地。要加新的，先删掉一块。",
  mQuota:"请求被拒",
  rate429:"被限流（每分钟请求数超过上限）。等一分钟再试，别连续切图层。",
  tTiles:"实际取一张瓦片：", tBlank:"回传空白图（该条件下没有可用影像）",
@@ -540,7 +540,7 @@ en:{
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
  shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
- bkOver:"; {n} more not added (two-field limit)",
+ bkOver:"; {n} more not added ({max}-field limit)",
  undo:"Undo last point", locMe:"Show my location", themeL:"Switch dark / light", langL:"Change language",
  mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
  cloudMode:"Clouds", clearOnly:"Clear days only", anyCloud:"Show with clouds",
@@ -548,7 +548,7 @@ en:{
  clearHint:"Only scenes below the cloud limit. Clean data, but can stay blank for days in cloudy weather.",
  anyHint:"No cloud filtering, so you always get the most recent scene. Cloud and cloud shadow depress the values — do not judge crop health from it.",
  lockNoField:"Select a field first to use this layer",
- maxTwo:"Two fields maximum. Delete one before adding another.",
+ maxFields:"{max} fields maximum. Delete one before adding another.",
  mQuota:"Request refused",
  rate429:"Rate limited (too many requests this minute). Wait a minute and avoid switching layers rapidly.",
  tTiles:"Real tile request:", tBlank:"blank image returned (no usable scene for these settings)",
@@ -649,7 +649,7 @@ ms:{
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
  shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
- bkOver:"; {n} lagi tidak ditambah (had dua kebun)",
+ bkOver:"; {n} lagi tidak ditambah (had {max} kebun)",
  undo:"Buang titik terakhir", locMe:"Tunjuk lokasi saya", themeL:"Tukar gelap / cerah", langL:"Tukar bahasa",
  mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
  cloudMode:"Awan", clearOnly:"Hari cerah sahaja", anyCloud:"Tunjuk walaupun berawan",
@@ -657,7 +657,7 @@ ms:{
  clearHint:"Hanya imej di bawah had awan. Data bersih, tetapi boleh kosong berhari-hari ketika berawan.",
  anyHint:"Tiada penapisan awan, jadi sentiasa ada imej terkini. Awan dan bayang awan menurunkan nilai — jangan nilai kesihatan tanaman daripadanya.",
  lockNoField:"Pilih kebun dahulu untuk guna lapisan ini",
- maxTwo:"Maksimum dua kebun. Padam satu sebelum tambah yang baharu.",
+ maxFields:"Maksimum {max} kebun. Padam satu sebelum tambah yang baharu.",
  mQuota:"Permintaan ditolak",
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
  seeMap:"Lihat peta",
@@ -1124,8 +1124,11 @@ function drawFields(fit){
       color: on?"#FF6A3D":"#FFFFFF", weight: on?3:2, opacity:on?1:.75,
       fillColor: on?"#FF6A3D":"#FFFFFF", fillOpacity: on?(satLayer?0:.32):.06
     }).addTo(map);
-    p.on("click",e=>{
-      if(drawing){ draftPts.push([e.latlng.lat,e.latlng.lng]); refreshDraft(); return; }
+    p.on("click",()=>{
+      /* While drawing, the map's own click handler takes the point: a tap on
+         a field reaches both, and adding it here too put every corner placed
+         inside an existing field in twice. */
+      if(drawing) return;
       activeId=f.id; onFieldChange();
     });
     fieldLayers.push(p);
@@ -1139,8 +1142,8 @@ function drawFields(fit){
 function refreshDraft(){
   if(draftLayer){map.removeLayer(draftLayer); draftLayer=null;}
   draftDots.forEach(d=>map.removeLayer(d)); draftDots=[];
-  draftPts.forEach(p=>draftDots.push(L.circleMarker(p,{radius:6,color:"#fff",weight:3,fillColor:"#FF6A3D",fillOpacity:1}).addTo(map)));
-  if(draftPts.length>=2) draftLayer=L.polyline(draftPts,{color:"#FF6A3D",weight:3}).addTo(map);
+  draftPts.forEach(p=>draftDots.push(L.circleMarker(p,{radius:6,color:"#fff",weight:3,fillColor:"#FF6A3D",fillOpacity:1,interactive:false}).addTo(map)));
+  if(draftPts.length>=2) draftLayer=L.polyline(draftPts,{color:"#FF6A3D",weight:3,interactive:false}).addTo(map);
 }
 map.on("click",e=>{ if(drawing){ draftPts.push([e.latlng.lat,e.latlng.lng]); refreshDraft(); }});
 
@@ -1414,7 +1417,7 @@ function mapChromeVisible(){
   $("rightcol").style.display=onMap?"":"none";
   $("layerPill").style.display=m?"":"none";
   if(!m) lyrMsg("");
-  $("btnDraw").hidden = !m || (!drawing && fields.length>=MAX_FIELDS);
+  $("btnDraw").hidden = !m;
   $("btnRadar").hidden=!w;
   $("btnRadar").classList.toggle("on",radarOn);
   $("wxwrap").classList.toggle("on",w);
@@ -1612,34 +1615,50 @@ function drawSetChrome(){
   b.innerHTML = drawing ? DONE_ICON : DRAW_ICON;
   b.title = drawing ? t().drawStart : t().addField;
   b.setAttribute("aria-label", b.title);
-  b.hidden = view!=="map" || (!drawing && fields.length>=MAX_FIELDS);
+  /* Never hidden for being at the cap: a button that silently disappears
+     reads as "drawing is broken". Tapping it says why instead. */
+  b.hidden = view!=="map";
   $("btnUndo").hidden   = !drawing || view !== "map";
   $("btnCancel").hidden = !drawing || view !== "map";
   $("btnCancel").title  = t().drawCancel;
 }
 
-const MAX_FIELDS = 2;
+/* Layers are fetched for the selected field only, so the number of saved
+   fields does not change processing-unit cost. Two was low enough that a
+   farmer with a third plot found the draw button gone and could not draw. */
+const MAX_FIELDS = 20;
+const maxMsg = s => s.replace("{max}", MAX_FIELDS);
 function drawBegin(){
-  if(fields.length >= MAX_FIELDS){ setStatus("bad", t().maxTwo); return; }
+  /* The status dot's tooltip is invisible on a phone, so anything the user
+     needs to read while drawing goes in the banner at the top of the map. */
+  if(fields.length >= MAX_FIELDS){ setStatus("bad", maxMsg(t().maxFields)); lyrMsg(maxMsg(t().maxFields)); return; }
   drawing = true; draftPts = []; refreshDraft();
-  drawSetChrome(); setStatus("busy", t().drawStart);
+  /* Two quick taps while placing corners would otherwise zoom the map. */
+  map.doubleClickZoom.disable();
+  drawSetChrome(); setStatus("busy", t().drawStart); lyrMsg(t().drawStart);
 }
 
 /* leave draw mode. save=false throws the points away. */
 function drawEnd(save){
   if(save){
-    if(draftPts.length < 3){ setStatus("bad", t().drawMin); return; }
-    const name = (prompt(t().newFieldQ, `${t().field} ${fields.length+1}`) || "").trim();
-    if(!name) setStatus("ok", t().drawGone);
-    else {
-      const ring = draftPts.map(p=>[+p[1].toFixed(6), +p[0].toFixed(6)]); ring.push(ring[0]);
-      const f = {id:Date.now().toString(36), name, ring};
-      fields.push(f); activeId = f.id; saveFields(); setStatus("ok", t().saved);
-    }
+    if(draftPts.length < 3){ setStatus("bad", t().drawMin); lyrMsg(t().drawMin); return; }
+    /* ✓ means "keep it". Cancel or an empty name used to throw the whole
+       outline away, and inside WhatsApp's or Facebook's in-app browser,
+       where prompt() returns null without showing anything, no field could
+       ever be saved. Discarding is what ✕ is for; this falls back to the
+       default name instead. */
+    const dflt = `${t().field} ${fields.length+1}`;
+    let name = null;
+    try{ name = prompt(t().newFieldQ, dflt); }catch(_){}
+    name = String(name||"").trim().slice(0,60) || dflt;
+    const ring = draftPts.map(p=>[+p[1].toFixed(6), +p[0].toFixed(6)]); ring.push(ring[0]);
+    const f = {id:Date.now().toString(36), name, ring};
+    fields.push(f); activeId = f.id; saveFields(); setStatus("ok", t().saved);
   } else {
     setStatus("ok", t().drawGone);
   }
   drawing = false; draftPts = []; refreshDraft();
+  map.doubleClickZoom.enable(); lyrMsg("");
   drawSetChrome(); drawFields(); applyLayer(); renderTop();
 }
 
@@ -1771,11 +1790,12 @@ $("srIn").addEventListener("keydown", e=>{
 });
 
 $("btnLoc").onclick=()=>{
-  if(!navigator.geolocation) return setStatus("bad",t().locNo);
+  if(!navigator.geolocation){ lyrMsg(t().locNo); return setStatus("bad",t().locNo); }
   setStatus("busy",t().locating);
   navigator.geolocation.getCurrentPosition(
     p=>{map.setView([p.coords.latitude,p.coords.longitude],16);setStatus("ok",t().located);},
-    e=>setStatus("bad",t().locFail+e.message),{enableHighAccuracy:true,timeout:12000});
+    e=>{ setStatus("bad",t().locFail+e.message); if(view==="map") lyrMsg(t().locFail+e.message); },
+    {enableHighAccuracy:true,timeout:12000});
 };
 $("fieldBtn").onclick=()=>{ view="fields"; renderAll(); };
 function onFieldChange(){
@@ -2173,7 +2193,7 @@ function bindPage(){
     let n=0, over=0;
     for(const f of r){
       if(have.has(f.id)) continue;
-      /* restoring used to be a way round the two-field limit */
+      /* restoring used to be a way round the field limit */
       if(fields.length>=MAX_FIELDS){ over++; continue; }
       fields.push(f); have.add(f.id); n++;
     }
@@ -2182,7 +2202,7 @@ function bindPage(){
       saveFields(); drawFields(); renderTop();
       $("bkOut").value=JSON.stringify({v:1,fields});
     }
-    $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}${over?t().bkOver.replace("{n}",over):""}</div>`;
+    $("bkOut2").innerHTML=`<div class="msg info">${t().bkAdded}${n}${t().bkSkip}${over?maxMsg(t().bkOver).replace("{n}",over):""}</div>`;
     $("bkIn").value="";
   };
   const copyBtn=(id,txt)=>{ const b=$(id); if(!b) return;
