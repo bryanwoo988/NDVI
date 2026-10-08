@@ -468,7 +468,7 @@ zh:{
  newFieldQ:"这块地叫什么？", field:"地块",
  drawStart:"点地图加点，点 ✓ 收尾（至少 3 点）", drawMin:"至少要 3 个点", saved:"已存到本机",
  ha:"公顷", lat:"中心纬度", lon:"中心经度", del:"删掉这块地", delQ:"确定删掉？", addField:"画新地块",
- locating:"定位中…", located:"已定位", locFail:"定位失败：", locNo:"这个浏览器不支持定位",
+ locating:"定位中…", located:"已定位", locBetter:"正在提高精度…", locCoarse:"精度只有 ±{m} 米。到室外空旷处，并确认手机设置里这个 App 的「精确位置」是开着的。", locFail:"定位失败：", locNo:"这个浏览器不支持定位",
  fieldsTitle:"地块", fieldsSub:"全部存在这台手机里",
  satTitle:"影像设置", satDate:"影像日期", satWin:"在这段天数里挑云最少的一景",
  days:"天", maxcc:"云量上限", rampLo:"裸土 · 枯", rampHi:"浓密冠层",
@@ -577,7 +577,7 @@ en:{
  newFieldQ:"Name this field", field:"Field",
  drawStart:"Tap the map to add points, tap ✓ to close (3 minimum)", drawMin:"Need at least 3 points", saved:"Saved on this device",
  ha:"hectares", lat:"centre lat", lon:"centre lon", del:"Delete this field", delQ:"Delete it?", addField:"Draw a new field",
- locating:"Finding you…", located:"Located", locFail:"Location failed: ", locNo:"No location support in this browser",
+ locating:"Finding you…", located:"Located", locBetter:"Improving accuracy…", locCoarse:"Only accurate to ±{m} m. Step outside, and check that Precise Location is on for this app in your phone settings.", locFail:"Location failed: ", locNo:"No location support in this browser",
  fieldsTitle:"Fields", fieldsSub:"All stored on this device",
  satTitle:"Imagery", satDate:"Image date", satWin:"Pick the least cloudy scene within",
  days:"days", maxcc:"Max cloud", rampLo:"Bare · dry", rampHi:"Dense canopy",
@@ -686,7 +686,7 @@ ms:{
  newFieldQ:"Nama kebun ini", field:"Kebun",
  drawStart:"Ketik peta untuk tambah titik, ketik ✓ untuk tutup (minimum 3)", drawMin:"Perlu sekurang-kurangnya 3 titik", saved:"Disimpan dalam peranti ini",
  ha:"hektar", lat:"lat tengah", lon:"lon tengah", del:"Padam kebun ini", delQ:"Padam?", addField:"Lukis kebun baharu",
- locating:"Mencari lokasi…", located:"Lokasi dijumpai", locFail:"Lokasi gagal: ", locNo:"Pelayar ini tiada sokongan lokasi",
+ locating:"Mencari lokasi…", located:"Lokasi dijumpai", locBetter:"Meningkatkan ketepatan…", locCoarse:"Ketepatan hanya ±{m} m. Keluar ke kawasan lapang, dan pastikan Lokasi Tepat dihidupkan untuk aplikasi ini dalam tetapan telefon.", locFail:"Lokasi gagal: ", locNo:"Pelayar ini tiada sokongan lokasi",
  fieldsTitle:"Kebun", fieldsSub:"Semua disimpan dalam peranti ini",
  satTitle:"Imej satelit", satDate:"Tarikh imej", satWin:"Pilih imej paling kurang awan dalam",
  days:"hari", maxcc:"Had awan", rampLo:"Tanah kosong", rampHi:"Kanopi tebal",
@@ -1812,13 +1812,56 @@ $("srIn").addEventListener("keydown", e=>{
   if(e.key === "Escape"){ srOpen(false); }
 });
 
+/* Where am I. A single getCurrentPosition() returns the first fix the phone
+   has, usually a Wi-Fi or cell-tower estimate taken before the GPS locks on,
+   hundreds of metres out; that is why this used to land in the wrong place.
+   The position is watched and the most accurate fix kept, until it is within
+   20 m or 15 s have passed, and the error circle is drawn so a rough fix
+   looks rough. Same rules as CompareCast (maplogic.js there). */
+const FIX_GOAL_M=20, FIX_MAX_MS=15000, FIX_COARSE_M=100;
+let meDot=null, meRing=null, stopLoc=null;
+function showMe(fix){
+  if(meDot) map.removeLayer(meDot);
+  if(meRing) map.removeLayer(meRing);
+  meRing=L.circle([fix.lat,fix.lon],{radius:fix.acc,interactive:false,weight:1,
+    color:"#4D93FF",fillColor:"#4D93FF",fillOpacity:.15}).addTo(map);
+  meDot=L.circleMarker([fix.lat,fix.lon],{radius:7,interactive:false,weight:3,
+    color:"#fff",fillColor:"#4D93FF",fillOpacity:1}).addTo(map);
+  map.fitBounds(meRing.getBounds(),{maxZoom:17,animate:false});
+}
 $("btnLoc").onclick=()=>{
   if(!navigator.geolocation){ lyrMsg(t().locNo); return setStatus("bad",t().locNo); }
+  if(stopLoc) stopLoc();
   setStatus("busy",t().locating);
-  navigator.geolocation.getCurrentPosition(
-    p=>{map.setView([p.coords.latitude,p.coords.longitude],16);setStatus("ok",t().located);},
-    e=>{ setStatus("bad",t().locFail+e.message); if(view==="map") lyrMsg(t().locFail+e.message); },
-    {enableHighAccuracy:true,timeout:12000});
+  const geo=navigator.geolocation;
+  let best=null, over=false, id=null;
+  const stop=()=>{ if(over) return; over=true; clearTimeout(timer); if(id!==null) geo.clearWatch(id); stopLoc=null; };
+  const finish=()=>{
+    if(over) return; stop();
+    if(!best){ setStatus("bad",t().locFail); if(view==="map") lyrMsg(t().locFail); return; }
+    if(best.acc>FIX_COARSE_M){ const m=t().locCoarse.replace("{m}",Math.round(best.acc));
+      setStatus("bad",m); lyrMsg(m); }
+    else { setStatus("ok",t().located+" · ±"+Math.round(best.acc)+" m"); lyrMsg(""); }
+  };
+  const timer=setTimeout(finish,FIX_MAX_MS);
+  id=geo.watchPosition(p=>{
+    if(over) return;
+    const c=p&&p.coords, lat=c?+c.latitude:NaN, lon=c?+c.longitude:NaN;
+    let acc=c?+c.accuracy:NaN; if(!isFinite(acc)||acc<0) acc=Infinity;
+    if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return;
+    /* the smaller error circle wins; a later rough reading never replaces a good one */
+    if(best && acc>best.acc) return;
+    const first=!best;
+    best={lat,lon,acc}; showMe(best);
+    if(acc<=FIX_GOAL_M) return finish();
+    if(first && view==="map") lyrMsg(t().locBetter);
+  },e=>{
+    if(over) return;
+    if(best) return finish();          // a fix in hand beats a later error
+    stop(); setStatus("bad",t().locFail+e.message); if(view==="map") lyrMsg(t().locFail+e.message);
+  },{enableHighAccuracy:true,maximumAge:0,timeout:FIX_MAX_MS});
+  if(over) geo.clearWatch(id);
+  stopLoc=stop;
 };
 $("fieldBtn").onclick=()=>{ view="fields"; renderAll(); };
 function onFieldChange(){
