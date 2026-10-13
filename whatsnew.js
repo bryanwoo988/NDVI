@@ -14,15 +14,21 @@
      lang       () => 'zh' | 'zht' | 'en' | 'ms'
      key        localStorage key that remembers the last version shown
      isNewUser  () => true for a first-ever launch: nothing to catch up on
-   WhatsNew.history()  opens the full list (for an About / Settings link) */
+   WhatsNew.history()  opens the full list (for an About / Settings link)
+   WhatsNew.label(releases)  "v1.2.0 · 2026-10-13 14:05": the version and when
+     this build went live (index.html's Last-Modified, set by GitHub Pages)
+   WhatsNew.offerUpdate(apply)  bar: "A new version is available [Update now] [Later]"
+   WhatsNew.watch({ apply })  for apps without their own update check: looks
+     for a newer index.html on open, on return to the screen and every 15
+     minutes, and offers it with offerUpdate. */
 (function () {
   'use strict';
 
   var UI = {
-    zh: { updated: '已更新到 v{v}', history: '更新记录', ok: '知道了', close: '关闭' },
-    zht: { updated: '已更新到 v{v}', history: '更新記錄', ok: '知道了', close: '關閉' },
-    en: { updated: 'Updated to v{v}', history: "What's new", ok: 'OK', close: 'Close' },
-    ms: { updated: 'Dikemas kini ke v{v}', history: 'Apa yang baharu', ok: 'OK', close: 'Tutup' },
+    zh: { updated: '已更新到 v{v}', history: '更新记录', ok: '知道了', close: '关闭', ready: '有新版本可以更新', now: '立即更新', later: '稍后' },
+    zht: { updated: '已更新到 v{v}', history: '更新記錄', ok: '知道了', close: '關閉', ready: '有新版本可以更新', now: '立即更新', later: '稍後' },
+    en: { updated: 'Updated to v{v}', history: "What's new", ok: 'OK', close: 'Close', ready: 'A new version is available', now: 'Update now', later: 'Later' },
+    ms: { updated: 'Dikemas kini ke v{v}', history: 'Apa yang baharu', ok: 'OK', close: 'Tutup', ready: 'Versi baharu tersedia', now: 'Kemas kini', later: 'Nanti' },
   };
 
   var cfg = null;
@@ -83,6 +89,11 @@
     '.wn-list ul{margin:0;padding-left:20px}' +
     '.wn-list li{margin:0 0 6px}' +
     '.wn-ok{margin-top:14px;align-self:stretch;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:600;font-size:16px;background:#2f7d4f;color:#fff;cursor:pointer}' +
+    '.wn-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147482999;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;' +
+    'padding:10px 10px 10px 16px;border-radius:14px;background:#1f2023;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.3);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;animation:wn-up .25s ease}' +
+    '.wn-bar span{flex:1}' +
+    '.wn-bar button{border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}' +
+    '.wn-bar .wn-now{background:#2f7d4f;color:#fff}.wn-bar .wn-later{background:transparent;color:#ccc}' +
     '@keyframes wn-fade{from{opacity:0}}@keyframes wn-up{from{transform:translateY(40px);opacity:.4}}';
 
   function el(tag, cls, text) {
@@ -92,12 +103,72 @@
     return n;
   }
 
+  function addStyle() {
+    if (document.getElementById('wn-style')) return;
+    var st = el('style'); st.id = 'wn-style'; st.textContent = CSS;
+    document.head.appendChild(st);
+  }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  // When this build went live: index.html's Last-Modified, local time.
+  function updatedAt() {
+    var d = new Date(document.lastModified);
+    if (!isFinite(d)) return '';
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function offerUpdate(apply) {
+    if (document.querySelector('.wn-bar')) return;
+    addStyle();
+    var ui = UI[lang()] || UI.en;
+    var bar = el('div', 'wn-bar');
+    bar.setAttribute('role', 'status');
+    var now = el('button', 'wn-now', ui.now), later = el('button', 'wn-later', ui.later);
+    now.type = later.type = 'button';
+    now.onclick = function () { now.disabled = true; (apply || reloadFresh)(); };
+    later.onclick = function () { bar.remove(); };
+    bar.appendChild(el('span', null, ui.ready));
+    bar.appendChild(now);
+    bar.appendChild(later);
+    document.body.appendChild(bar);
+  }
+
+  // Let the service worker fetch the new files, then load them.
+  function reloadFresh() {
+    var go = function () { location.reload(); };
+    try {
+      if (!navigator.serviceWorker) return go();
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (!reg) return go();
+        reg.update().catch(function () {}).then(function () { setTimeout(go, 600); });
+      }, go);
+    } catch (e) { go(); }
+  }
+
+  var watching = false;
+  function watch(opts) {
+    if (watching) return;
+    watching = true;
+    opts = opts || {};
+    var running = Date.parse(document.lastModified);
+    var busy = false, offered = false;
+    function check() {
+      if (busy || offered || document.hidden || !isFinite(running)) return;
+      busy = true;
+      fetch(opts.url || './', { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+        var live = Date.parse(r.ok ? r.headers.get('Last-Modified') : '');
+        if (isFinite(live) && live - running >= 1000) { offered = true; offerUpdate(opts.apply); }
+      }).catch(function () { /* offline: try again later */ }).then(function () { busy = false; });
+    }
+    setTimeout(check, 3000);
+    document.addEventListener('visibilitychange', check);
+    setInterval(check, 15 * 60e3);
+  }
+
   function sheet(title, list, lang) {
     if (document.querySelector('.wn-scrim')) return;
-    if (!document.getElementById('wn-style')) {
-      var st = el('style'); st.id = 'wn-style'; st.textContent = CSS;
-      document.head.appendChild(st);
-    }
+    addStyle();
     var ui = UI[lang] || UI.en;
     var scrim = el('div', 'wn-scrim' + (isDark() ? ' wn-dark' : ''));
     var card = el('div', 'wn-card');
@@ -166,12 +237,18 @@
       sheet((UI[lang()] || UI.en).history, cfg.releases, lang());
     },
 
-    // "v1.2.0 · 2026-10-13" for an About page; works before init() too.
+    // "v1.2.0 · 2026-10-13 14:05" for an About page: the version and when this
+    // build went live (falls back to the release date). Works before init().
     label: function (releases) {
       var list = releases || (cfg && cfg.releases) || [];
       var r = list[0];
       if (!r) return '';
-      return 'v' + r.v + (r.date ? ' · ' + r.date : '');
+      var when = updatedAt() || r.date || '';
+      return 'v' + r.v + (when ? ' · ' + when : '');
     },
+
+    updatedAt: updatedAt,
+    offerUpdate: offerUpdate,
+    watch: watch,
   };
 })();

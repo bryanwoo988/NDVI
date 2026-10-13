@@ -823,6 +823,10 @@ const saveCfg = ()=>{
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
 const RELEASES = [
+  {v:"1.2.0", date:"2026-10-13", notes:{
+    zh:["「设置」里的版本号旁边会显示这一版的更新日期和时间"],
+    en:["Settings shows the date and time of this update next to the version"],
+    ms:["Tetapan menunjukkan tarikh dan masa kemas kini ini di sebelah versi"]}},
   {v:"1.1.0", date:"2026-10-13", notes:{
     zh:["App 更新后会自动弹出「更新了什么」：版本号、日期和改动内容；在「设置」的 App 简介里可以随时查看全部更新记录"],
     en:["After an update the app now shows what changed: the version, the date and what is new; the full list is in the About card in Settings"],
@@ -2117,7 +2121,6 @@ function pgSet(){
     <img class="about-logo" src="./icon-192.png" alt="" width="64" height="64">
     <div class="about-name">${APP_NAME}</div>
     <div class="about-ver">${t().version} ${esc(WhatsNew.label(RELEASES))} · <a href="#" id="whatsNew">${t().whatsNew}</a></div>
-    <div class="about-ver">build ${esc(REVISION)}</div>
     <p class="credit">Created by Bryan Woo</p>
     <img class="qr" src="./qr.svg" alt="${esc(t().qrAlt)}" width="200" height="200">
     <p class="share-cap">${t().qrCap}</p>
