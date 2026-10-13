@@ -373,6 +373,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 </div>
 
 <script src="./updatelogic.js"></script>
+<script src="./whatsnew.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
   integrity="sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==" crossorigin="anonymous"></script>
 <script>
@@ -430,7 +431,7 @@ zh:{
  prodSlow:"产能分区要汇总三年的影像，第一次大约要 20 秒…",
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
- shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
+ whatsNew:"更新记录", shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
  bkOver:"；已达 {max} 块上限，另有 {n} 块没加入",
  undo:"撤销上一个点", locMe:"定位到我", themeL:"切换深色 / 浅色", langL:"切换语言",
  mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
@@ -539,7 +540,7 @@ en:{
  prodSlow:"Productivity combines three years of imagery — about 20 seconds the first time…",
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
- shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
+ whatsNew:"What's new", shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
  bkOver:"; {n} more not added ({max}-field limit)",
  undo:"Undo last point", locMe:"Show my location", themeL:"Switch dark / light", langL:"Change language",
  mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
@@ -648,7 +649,7 @@ ms:{
  prodSlow:"Produktiviti menggabungkan imej tiga tahun — kira-kira 20 saat kali pertama…",
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
- shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
+ whatsNew:"Apa yang baharu", shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
  bkOver:"; {n} lagi tidak ditambah (had {max} kebun)",
  undo:"Buang titik terakhir", locMe:"Tunjuk lokasi saya", themeL:"Tukar gelap / cerah", langL:"Tukar bahasa",
  mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
@@ -771,6 +772,8 @@ const LS = (()=>{
 /* The user's calendar date. toISOString() is UTC, so in Malaysia it still
    said yesterday until 8 am: the date picker could not select today. */
 const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+/* nothing saved yet: a first-ever launch, with no update to catch up on */
+const WN_NEW = LS.get("os.lang")===null && LS.get("os.fields")===null;
 let lang = LS.get("os.lang"); if(!LANGS.includes(lang)) lang="zh";
 const t = () => T[lang];
 
@@ -816,6 +819,29 @@ const saveCfg = ()=>{
   for(const k in cfg) if(cfg[k]!=="" && cfg[k]!==CFG_BASE[k]) own[k] = cfg[k];
   LS.set("os.cfg", JSON.stringify(own));
 };
+/* What changed, newest first. Every update adds an entry here; after the
+   update the app shows the new entries once (whatsnew.js), and the About
+   card shows the version and opens the whole list. */
+const RELEASES = [
+  {v:"1.1.0", date:"2026-10-13", notes:{
+    zh:["App 更新后会自动弹出「更新了什么」：版本号、日期和改动内容；在「设置」的 App 简介里可以随时查看全部更新记录"],
+    en:["After an update the app now shows what changed: the version, the date and what is new; the full list is in the About card in Settings"],
+    ms:["Selepas kemas kini, aplikasi kini menunjukkan apa yang berubah: versi, tarikh dan perkara baharu; senarai penuh ada dalam kad Perihal di Tetapan"]}},
+  {v:"1.0.0", date:"2026-10-09", notes:{
+    zh:["「定位到我」会等几秒、取最准的 GPS 位置，不再用误差几百米的第一个读数",
+        "街道地图改用 Esri，深浅色主题都清楚",
+        "画地块更稳：画图按钮不会消失，画好的边界不会丢；坏掉的地块资料不会让 App 打不开",
+        "天气放久了会自动刷新；降雨机率用词统一"],
+    en:["\u201cLocate me\u201d waits a few seconds for the best GPS fix instead of a first reading that can be hundreds of metres out",
+        "The street map now uses Esri, clear in both light and dark themes",
+        "Drawing fields is more reliable: the draw button no longer vanishes and outlines are not lost; a damaged saved field no longer stops the app opening",
+        "Weather that has gone stale refreshes by itself"],
+    ms:["\u201cCari lokasi saya\u201d menunggu beberapa saat untuk bacaan GPS terbaik, bukan bacaan pertama yang boleh tersasar ratusan meter",
+        "Peta jalan kini menggunakan Esri, jelas dalam tema cerah dan gelap",
+        "Melukis kebun lebih stabil: butang lukis tidak lagi hilang dan sempadan tidak hilang; kebun tersimpan yang rosak tidak lagi menghalang aplikasi dibuka",
+        "Cuaca yang sudah lama dimuat semula dengan sendirinya"]}}
+];
+const APP_VERSION = RELEASES[0].v;
 /* Which build this is: index.html's own Last-Modified, which GitHub Pages
    sets on every deploy. Replaces a hand-typed build label that went stale. */
 const REVISION = (()=>{ const d=new Date(document.lastModified);
@@ -2090,7 +2116,8 @@ function pgSet(){
   return `<div class="about">
     <img class="about-logo" src="./icon-192.png" alt="" width="64" height="64">
     <div class="about-name">${APP_NAME}</div>
-    <div class="about-ver">${t().version} ${esc(REVISION)}</div>
+    <div class="about-ver">${t().version} ${esc(WhatsNew.label(RELEASES))} · <a href="#" id="whatsNew">${t().whatsNew}</a></div>
+    <div class="about-ver">build ${esc(REVISION)}</div>
     <p class="credit">Created by Bryan Woo</p>
     <img class="qr" src="./qr.svg" alt="${esc(t().qrAlt)}" width="200" height="200">
     <p class="share-cap">${t().qrCap}</p>
@@ -2432,6 +2459,12 @@ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().c
 measureGap();
 applyTheme(); applyLayer(); drawFields(); renderAll();
 resumeAfterUpdate();
+/* after an update: what changed, once */
+WhatsNew.init({version:APP_VERSION, releases:RELEASES, key:"os.seenVersion",
+  lang:()=>lang, isNewUser:()=>WN_NEW});
+document.addEventListener("click", e=>{
+  if(e.target.closest("#whatsNew")){ e.preventDefault(); WhatsNew.history(); }
+});
 /* a page served from the offline copy may be older than the live build */
 setTimeout(checkForUpdate, 1500);
 

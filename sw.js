@@ -13,7 +13,7 @@
    worker's own logic does. Same scheme as CompareCast and Oil Palm Basics. */
 const SHELL = 'ndvi-shell';
 const SHELL_FILES = [
-  './', './index.html', './swpolicy.js', './updatelogic.js', './manifest.webmanifest',
+  './', './index.html', './swpolicy.js', './updatelogic.js', './whatsnew.js', './manifest.webmanifest',
   './favicon.png', './apple-touch-icon.png', './icon-192.png', './icon-512.png', './qr.svg',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
