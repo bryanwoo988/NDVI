@@ -45,6 +45,23 @@
   --sh:0 4px 14px rgba(0,0,0,.45), 0 18px 44px rgba(0,0,0,.55);
   --sh-s:0 2px 10px rgba(0,0,0,.5);
 }
+/* Appearance, as in AnyScan: data-theme picks the side, data-palette one of
+   four looks on it. Classic and Midnight are the bases above (the app's
+   original colours); the others override them. Only the app's own chrome
+   changes: the NDVI, moisture and productivity colours are data and stay
+   the same in every look, so a map means the same thing on every phone. */
+:root[data-palette=paper]{--bg:#FFFDF8;--surf:#F6F1E7;--surf2:#EFE7D8;--line:#E3D9C6;--text:#2B2620;--mute:#6E6455;
+  --accent:#A8571A;--good:#5C7F1E;--navbg:#F6F1E7;--navsel:#FFFDF8}
+:root[data-palette=mint]{--bg:#FFFFFF;--surf:#EEF7F3;--surf2:#E0F1EA;--line:#CDE4DA;--text:#15302A;--mute:#557069;
+  --accent:#0B7F62;--good:#0B7F62;--navbg:#EEF7F3;--navsel:#FFFFFF}
+:root[data-palette=lavender]{--bg:#FFFFFF;--surf:#F5F3FC;--surf2:#EBE7F8;--line:#DCD6F0;--text:#231F3A;--mute:#625C80;
+  --accent:#5B45C4;--good:#2E8B57;--navbg:#F5F3FC;--navsel:#FFFFFF}
+:root[data-theme=dark][data-palette=oled]{--bg:#000000;--surf:#0D0D0D;--surf2:#1A1A1A;--line:#262626;--text:#EDEDED;--mute:#9B9B9B;
+  --chrome:rgba(0,0,0,.86);--navbg:#0D0D0D;--navsel:#1A1A1A}
+:root[data-theme=dark][data-palette=slate]{--bg:#23272F;--surf:#2C313B;--surf2:#363C48;--line:#404857;--text:#E2E6EC;--mute:#A0AAB6;
+  --accent:#8CBCEA;--accent-ink:#0E131F;--chrome:rgba(35,39,47,.88);--navbg:#2C313B;--navsel:#363C48}
+:root[data-theme=dark][data-palette=grape]{--bg:#17121F;--surf:#221A2E;--surf2:#2D243C;--line:#3A2F4D;--text:#EDE7F8;--mute:#AB9FC2;
+  --accent:#B89DFF;--accent-ink:#17121F;--chrome:rgba(23,18,31,.88);--navbg:#221A2E;--navsel:#2D243C}
 *,*::before,*::after{box-sizing:inherit}
 html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--navbg)}
 body{
@@ -323,6 +340,33 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .gstep b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
 .gstep p{margin:0;font-size:14px;line-height:1.55;color:var(--mute)}
 .gline{font-size:15.5px;font-weight:700;line-height:1.5;margin:0 0 6px}
+
+/* ---------- appearance picker ---------- */
+.looks-title{margin:16px 0 8px;font-size:13.5px;font-weight:700;color:var(--mute)}
+.looks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.look{display:flex;flex-direction:column;gap:5px;padding:6px;border-radius:14px;border:2px solid transparent;
+  font-size:12px;font-weight:600;color:var(--text);background:var(--bg)}
+.look.on{border-color:var(--accent)}
+.look-prev{display:block;height:52px;padding:8px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
+.look-card{display:flex;flex-direction:column;gap:5px;height:100%;padding:6px;border-radius:7px}
+.look-card i{display:block;width:45%;height:6px;border-radius:3px}
+.look-card b{display:block;width:75%;height:5px;border-radius:3px;opacity:.35;background:currentColor}
+.look-name{text-align:center;line-height:1.25}
+
+/* ---------- data FAQ ---------- */
+.faq{border-bottom:1px solid var(--line)}
+.faq:last-of-type{border-bottom:none}
+.faq summary{list-style:none;cursor:pointer;padding:14px 26px 14px 0;font-size:15.5px;font-weight:750;
+  letter-spacing:-.01em;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:2px;top:11px;font-size:22px;font-weight:500;color:var(--mute)}
+.faq[open] summary::after{content:"\2212"}
+.faq .a{padding:0 0 14px;font-size:14px;line-height:1.6;color:var(--mute)}
+.faq .a p{margin:0 0 8px}
+.faq .a ul{margin:4px 0 8px;padding-left:18px}
+.faq .a b{color:var(--text)}
+.faq-say{background:var(--surf);border-radius:16px;padding:13px 15px;margin:0 0 10px;font-size:15px;font-weight:700;line-height:1.5}
+.faq-say small{display:block;font-size:12px;font-weight:600;color:var(--mute);margin-bottom:3px}
 </style>
 <style id="splash-css">
 /* Splash: shown from the first paint until the app is ready, and while a new
@@ -349,6 +393,17 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 @keyframes splash-fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){#splash.animate .splash-logo,#splash.animate .splash-tag,#splash.animate .splash-foot{animation:none}}
 </style>
+<script>
+/* The look before first paint, so a dark-theme user never sees a white flash. */
+try{
+  var tm=localStorage.getItem("os.theme");
+  var dk=tm==="dark"||(tm!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);
+  var lk=localStorage.getItem(dk?"os.darkLook":"os.lightLook");
+  var ok=dk?["midnight","oled","slate","grape"]:["classic","paper","mint","lavender"];
+  document.documentElement.dataset.theme=dk?"dark":"light";
+  document.documentElement.dataset.palette=ok.indexOf(lk)>=0?lk:ok[0];
+}catch(e){}
+</script>
 <!--SPLASH-LINKS-->
 <link rel="apple-touch-startup-image" href="./splash/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
 <link rel="apple-touch-startup-image" href="./splash/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
@@ -506,7 +561,30 @@ zh:{
  tCat:"影像日期查询（Catalog API）", tCatN:"找到 {n} 次过境，最近 {d}",
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
- whatsNew:"更新记录", guideBtn:"使用说明", splashUpd:"发现新版本，正在更新…",
+ whatsNew:"更新记录", guideBtn:"使用说明",
+ lookT:"外观", themeAuto:"跟随系统", themeLight:"浅色", themeDark:"深色", lightLooks:"浅色主题", darkLooks:"深色主题",
+ themeNote:"「跟随系统」时，手机是浅色就用你选的浅色主题，深色就用你选的深色主题。地图上的长势、水分颜色在每种主题都一样。",
+ looks:{classic:"经典",paper:"纸张",mint:"薄荷",lavender:"薰衣草",midnight:"午夜",oled:"纯黑 OLED",slate:"石板",grape:"葡萄"},
+ faqBtn:"数据怎么看？", faqT:"数据怎么看？", faqSayL:"一句话跟别人讲",
+ faqSay:"卫星每 5 天帮你看一次地，看长势、看水分、看变化。",
+ faq:[["这些数据告诉我们什么？",`<p>数据来自欧洲免费的 Sentinel-2 卫星，一格是 10×10 米。</p><ul>
+   <li><b>长势（NDVI）</b>：叶子有多绿、多茂密。越绿长得越好；黄、红是稀疏或裸土，要去看看。</li>
+   <li><b>水分（NDMI）</b>：叶片含水量。偏蓝是湿，偏黄是干。</li>
+   <li><b>产能分区</b>：三年的平均长势分成 5 级，看地块里哪一区长期比较好、哪一区长期比较差。</li>
+   <li><b>真彩影像</b>：就是普通的卫星照片。</li></ul>`],
+  ["颜色怎么判断？",`<p>长势（NDVI）的大致范围：</p><ul>
+   <li><b>0.2 以下</b>：裸土、水、建筑</li><li><b>0.2–0.4</b>：稀疏</li><li><b>0.4–0.6</b>：中等</li><li><b>0.6 以上</b>：茂密</li></ul>
+   <p>成龄果树树冠很密，NDVI 常常已经到顶，所以<b>同一块地前后比较</b>比看绝对数字有用。</p>`],
+  ["这张图是哪一天的？",`<p>看地图下方的图层按钮，例如「2026-10-25 · 云量 12%」，就是这张图的拍摄日期。</p>
+   <p>App 会在你选的日期往前 30 天（可改成 6 / 12 / 20 天）里，挑<b>最近一次云量合格</b>的拍摄，只用那一天，不是把几天叠在一起。</p>`],
+  ["可以看过去几天的数据吗？最多看多久？",`<p>可以。但卫星大约<b>每 5 天才拍一次</b>，所以不是每天都有新图。</p><ul>
+   <li><b>地图</b>：在图层设置里选任何过去的日期，看那时的一张图。Sentinel-2 卫星 2015 年才发射，更早没有。</li>
+   <li><b>趋势页</b>：最多回看 <b>3 年</b>，每 10 天一个点（取那 10 天里云最少的一次），看整块地是变好还是变差。</li></ul>`],
+  ["空白代表什么？",`<p>空白是<b>被云或云影挡住，卫星没看到</b>，不是没种东西，也不是作物死了。</p>
+   <p>可以把天数拉长，或改成「有云也显示」。但有云时数值会偏低，不要拿来判断田况。趋势页里多云的时段也会直接空着，不会自己补数字。</p>`],
+  ["「云量」是什么意思？",`<p>云量是<b>整个卫星图幅（约 100×100 公里）</b>的平均，不是你这块地的。云量低，你的地上还是可能有一朵云；被云盖住的像素会留空。</p>`],
+  ["准不准？能看单棵树吗？",`<p>一格 10×10 米，适合看<b>一片区域</b>的趋势，看不了单棵树，也不能代替下田看。看到某一区变差，就去那里实地检查。</p>`],
+  ["天气和土壤水分是实测的吗？",`<p>不是。天气、降雨和土壤水分都是 Open-Meteo 的<b>数值模型预报</b>，不是你田里的感测器。用来做灌溉决定前，最好用土壤水分计校正一下。</p>`]], splashUpd:"发现新版本，正在更新…",
  guideT:"怎么用这个 App", guideStart:"开始使用",
  guideLine:"卫星每 5 天帮你看一次地：看长势、看水分、看变化。",
  guide:[["map","先找到你的地","点上面 🔍 搜地名，或点右边 ➤ 定位到你现在的位置。"],
@@ -629,7 +707,30 @@ en:{
  tCat:"Image date lookup (Catalog API)", tCatN:"{n} passes found, latest {d}",
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
- whatsNew:"What's new", guideBtn:"How to use", splashUpd:"New version found, updating…",
+ whatsNew:"What's new", guideBtn:"How to use",
+ lookT:"Appearance", themeAuto:"Match system", themeLight:"Light", themeDark:"Dark", lightLooks:"Light theme", darkLooks:"Dark theme",
+ themeNote:"In Match system the app follows your phone: your light theme when the phone is light, your dark theme when it is dark. Vegetation and moisture colours on the map are the same in every theme.",
+ looks:{classic:"Classic",paper:"Paper",mint:"Mint",lavender:"Lavender",midnight:"Midnight",oled:"OLED Black",slate:"Slate",grape:"Grape"},
+ faqBtn:"What does the data mean?", faqT:"What does the data mean?", faqSayL:"In one sentence",
+ faqSay:"A satellite looks at your field every 5 days: growth, moisture and how it changes.",
+ faq:[["What does the data tell us?",`<p>It comes from the free European Sentinel-2 satellites; one pixel is 10 × 10 m.</p><ul>
+   <li><b>Vegetation (NDVI)</b>: how green and dense the leaves are. Greener is better; yellow or red is sparse or bare and worth a look.</li>
+   <li><b>Moisture (NDMI)</b>: water in the leaves. Blue is wet, yellow is dry.</li>
+   <li><b>Productivity</b>: three years of average growth in 5 classes, showing which parts of the field are consistently stronger or weaker.</li>
+   <li><b>True colour</b>: an ordinary satellite photo.</li></ul>`],
+  ["How do I read the colours?",`<p>Rough NDVI ranges:</p><ul>
+   <li><b>Below 0.2</b>: bare soil, water, buildings</li><li><b>0.2–0.4</b>: sparse</li><li><b>0.4–0.6</b>: moderate</li><li><b>Above 0.6</b>: dense</li></ul>
+   <p>Mature tree canopies are so dense that NDVI is often at its ceiling, so <b>comparing the same field over time</b> tells you more than the number itself.</p>`],
+  ["Which day is this image from?",`<p>The layer button under the map shows it, e.g. “2026-10-25 · cloud 12%”: that is the day the image was taken.</p>
+   <p>The app looks back 30 days (or 6 / 12 / 20) from the date you pick and uses the <b>most recent pass with acceptable cloud</b> — one day, not several blended together.</p>`],
+  ["Can I see past days? How far back?",`<p>Yes. But the satellite passes only <b>about every 5 days</b>, so there is not a new image every day.</p><ul>
+   <li><b>Map</b>: pick any past date in the layer settings to see one image from then. Sentinel-2 was launched in 2015; there is nothing earlier.</li>
+   <li><b>Trend page</b>: up to <b>3 years</b> back, one point per 10 days (the least cloudy pass in each), to see whether the field is improving or declining.</li></ul>`],
+  ["What does a blank area mean?",`<p>Blank means <b>cloud or cloud shadow hid the field from the satellite</b> — not bare ground and not dead crops.</p>
+   <p>Try a longer window, or “Show with clouds”; but values read low under cloud, so do not judge the crop from them. Cloudy periods on the Trend page stay empty too; nothing is filled in.</p>`],
+  ["What does “cloud cover” mean?",`<p>It is the average over <b>the whole satellite tile (about 100 × 100 km)</b>, not your field. A low figure can still leave a cloud over your land; covered pixels are left blank.</p>`],
+  ["How accurate is it? Can I see single trees?",`<p>One pixel is 10 × 10 m: good for the trend of <b>an area</b>, not single trees, and no substitute for walking the field. When a patch gets worse, go and check it.</p>`],
+  ["Are the weather and soil moisture measured?",`<p>No. Weather, rain and soil moisture are <b>numerical model forecasts</b> from Open-Meteo, not sensors in your field. Calibrate with a soil moisture probe before using them for irrigation decisions.</p>`]], splashUpd:"New version found, updating…",
  guideT:"How to use this app", guideStart:"Get started",
  guideLine:"A satellite looks at your field every 5 days: growth, moisture and how it changes.",
  guide:[["map","Find your land","Tap 🔍 at the top to search a place, or ➤ on the right to go to where you are."],
@@ -752,7 +853,30 @@ ms:{
  tCat:"Carian tarikh imej (Catalog API)", tCatN:"{n} laluan dijumpai, terkini {d}",
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
- whatsNew:"Apa yang baharu", guideBtn:"Cara guna", splashUpd:"Versi baharu dijumpai, sedang dikemas kini…",
+ whatsNew:"Apa yang baharu", guideBtn:"Cara guna",
+ lookT:"Rupa", themeAuto:"Ikut sistem", themeLight:"Cerah", themeDark:"Gelap", lightLooks:"Tema cerah", darkLooks:"Tema gelap",
+ themeNote:"Dalam mod Ikut sistem, aplikasi mengikut telefon anda: tema cerah apabila telefon cerah, tema gelap apabila telefon gelap. Warna tumbuhan dan lembapan pada peta sama dalam setiap tema.",
+ looks:{classic:"Klasik",paper:"Kertas",mint:"Pudina",lavender:"Lavender",midnight:"Tengah Malam",oled:"Hitam OLED",slate:"Batu Loh",grape:"Anggur"},
+ faqBtn:"Apa maksud data ini?", faqT:"Apa maksud data ini?", faqSayL:"Dalam satu ayat",
+ faqSay:"Satelit melihat kebun anda setiap 5 hari: pertumbuhan, lembapan dan perubahannya.",
+ faq:[["Apa yang data ini beritahu?",`<p>Data daripada satelit Sentinel-2 Eropah yang percuma; satu piksel ialah 10 × 10 m.</p><ul>
+   <li><b>Tumbuhan (NDVI)</b>: betapa hijau dan tebal daun. Lebih hijau lebih baik; kuning atau merah bermaksud jarang atau tanah kosong dan patut diperiksa.</li>
+   <li><b>Lembapan (NDMI)</b>: air dalam daun. Biru basah, kuning kering.</li>
+   <li><b>Produktiviti</b>: purata pertumbuhan tiga tahun dalam 5 kelas, menunjukkan bahagian kebun yang sentiasa lebih kuat atau lemah.</li>
+   <li><b>Warna asli</b>: gambar satelit biasa.</li></ul>`],
+  ["Bagaimana membaca warna?",`<p>Julat kasar NDVI:</p><ul>
+   <li><b>Bawah 0.2</b>: tanah kosong, air, bangunan</li><li><b>0.2–0.4</b>: jarang</li><li><b>0.4–0.6</b>: sederhana</li><li><b>Atas 0.6</b>: tebal</li></ul>
+   <p>Kanopi pokok matang sangat tebal sehingga NDVI selalunya sudah tepu, jadi <b>membandingkan kebun yang sama dari masa ke masa</b> lebih berguna daripada angka itu sendiri.</p>`],
+  ["Imej ini dari hari apa?",`<p>Butang lapisan di bawah peta menunjukkannya, contohnya “2026-10-25 · awan 12%”: itulah tarikh imej diambil.</p>
+   <p>Aplikasi melihat 30 hari ke belakang (atau 6 / 12 / 20) dari tarikh yang anda pilih dan menggunakan <b>laluan terkini dengan awan yang boleh diterima</b> — satu hari, bukan beberapa hari dicampur.</p>`],
+  ["Boleh lihat hari-hari lepas? Berapa lama ke belakang?",`<p>Boleh. Tetapi satelit lalu <b>kira-kira setiap 5 hari</b>, jadi tiada imej baharu setiap hari.</p><ul>
+   <li><b>Peta</b>: pilih mana-mana tarikh lepas dalam tetapan lapisan untuk melihat satu imej ketika itu. Sentinel-2 dilancarkan pada 2015; tiada yang lebih awal.</li>
+   <li><b>Halaman Trend</b>: sehingga <b>3 tahun</b> ke belakang, satu titik setiap 10 hari (laluan paling kurang awan), untuk melihat sama ada kebun bertambah baik atau merosot.</li></ul>`],
+  ["Apa maksud kawasan kosong?",`<p>Kosong bermaksud <b>awan atau bayang awan menutup kebun daripada satelit</b> — bukan tanah kosong dan bukan tanaman mati.</p>
+   <p>Cuba tempoh lebih panjang, atau “Tunjuk walaupun berawan”; tetapi nilai menjadi rendah di bawah awan, jadi jangan nilai tanaman daripadanya. Tempoh berawan di halaman Trend juga dibiarkan kosong; tiada yang diisi.</p>`],
+  ["Apa maksud “litupan awan”?",`<p>Ia purata <b>seluruh jubin satelit (kira-kira 100 × 100 km)</b>, bukan kebun anda. Angka rendah masih boleh ada awan di atas tanah anda; piksel yang ditutup dibiarkan kosong.</p>`],
+  ["Sejauh mana tepat? Boleh lihat pokok satu-satu?",`<p>Satu piksel 10 × 10 m: sesuai untuk trend <b>satu kawasan</b>, bukan pokok satu-satu, dan bukan pengganti turun ke kebun. Jika satu bahagian merosot, pergi periksa.</p>`],
+  ["Adakah cuaca dan lembapan tanah diukur?",`<p>Tidak. Cuaca, hujan dan lembapan tanah ialah <b>ramalan model berangka</b> daripada Open-Meteo, bukan sensor di kebun anda. Tentukur dengan probe lembapan tanah sebelum guna untuk keputusan pengairan.</p>`]], splashUpd:"Versi baharu dijumpai, sedang dikemas kini…",
  guideT:"Cara guna aplikasi ini", guideStart:"Mula",
  guideLine:"Satelit melihat kebun anda setiap 5 hari: pertumbuhan, lembapan dan perubahannya.",
  guide:[["map","Cari tanah anda","Ketik 🔍 di atas untuk cari tempat, atau ➤ di kanan untuk pergi ke lokasi anda."],
@@ -919,7 +1043,20 @@ if(!Array.isArray(fields)) fields=[];
   fields = fields.map(cleanField).filter(f => f && !seen.has(f.id) && seen.add(f.id));
 }
 let activeId = fields[0]?fields[0].id:null;
-let theme = LS.get("os.theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+/* Appearance: a mode (auto / light / dark) and one look for each side, as in
+   AnyScan. "auto" follows the phone. os.theme used to hold light or dark
+   only; a phone that never touched it is now on auto, which is what it did. */
+const LIGHT_LOOKS=["classic","paper","mint","lavender"], DARK_LOOKS=["midnight","oled","slate","grape"];
+/* background, card, accent: for the picker's previews and the status bar */
+const LOOK_COLOURS={classic:["#F3F5F4","#FFFFFF","#1E8E4A"],paper:["#F6F1E7","#FFFDF8","#A8571A"],
+  mint:["#EEF7F3","#FFFFFF","#0B7F62"],lavender:["#F5F3FC","#FFFFFF","#5B45C4"],
+  midnight:["#0D1412","#161F1C","#4ECB7B"],oled:["#000000","#0D0D0D","#4ECB7B"],
+  slate:["#23272F","#2C313B","#8CBCEA"],grape:["#17121F","#221A2E","#B89DFF"]};
+let themeMode = LS.get("os.theme"); if(!["auto","light","dark"].includes(themeMode)) themeMode="auto";
+let lightLook = LS.get("os.lightLook"); if(!LIGHT_LOOKS.includes(lightLook)) lightLook="classic";
+let darkLook  = LS.get("os.darkLook");  if(!DARK_LOOKS.includes(darkLook))  darkLook="midnight";
+const sysDark = matchMedia("(prefers-color-scheme: dark)");
+let theme = themeMode==="auto" ? (sysDark.matches?"dark":"light") : themeMode;
 const LAYER_KEYS = ["OFF","TRUE","NDVI","PROD","MOIST","STREET"];
 let layerKey = LS.get("os.layer");
 if(!LAYER_KEYS.includes(layerKey)) layerKey = "TRUE";
@@ -934,6 +1071,13 @@ const saveCfg = ()=>{
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
 const RELEASES = [
+  {v:"1.5.0", date:"2026-11-04", notes:{
+    zh:["「设置」新增「外观」：可选跟随系统、浅色或深色，浅色和深色各有 4 种主题（经典、纸张、薄荷、薰衣草；午夜、纯黑 OLED、石板、葡萄）",
+        "新增「数据怎么看？」：用问答解释长势和水分代表什么、颜色怎么判断、图是哪一天的、最多能看多久以前、空白代表什么。在「设置」和地图的 ⓘ 里都能打开"],
+    en:["New Appearance section in Settings: match the system, light or dark, with four themes each (Classic, Paper, Mint, Lavender; Midnight, OLED Black, Slate, Grape)",
+        "New “What does the data mean?”: questions and answers on what vegetation and moisture show, how to read the colours, which day an image is from, how far back you can look and what blank areas mean. Open it from Settings or the ⓘ on the map"],
+    ms:["Bahagian Rupa baharu di Tetapan: ikut sistem, cerah atau gelap, dengan empat tema setiap satu (Klasik, Kertas, Pudina, Lavender; Tengah Malam, Hitam OLED, Batu Loh, Anggur)",
+        "Baharu “Apa maksud data ini?”: soal jawab tentang apa yang ditunjukkan oleh tumbuhan dan lembapan, cara membaca warna, imej dari hari apa, berapa lama ke belakang boleh dilihat dan maksud kawasan kosong. Buka dari Tetapan atau ⓘ pada peta"]}},
   {v:"1.4.0", date:"2026-11-04", notes:{
     zh:["新增启动画面；打开 App 时如果有新版本，会先显示「发现新版本，正在更新…」，更新好再进 App",
         "新增简单的使用说明：第一次打开会自动出现，以后在「设置」里点「使用说明」随时可以再看"],
@@ -1630,12 +1774,25 @@ const $=id=>document.getElementById(id);
 
 /* ===================== chrome render ===================== */
 function applyTheme(){
+  theme = themeMode==="auto" ? (sysDark.matches?"dark":"light") : themeMode;
+  const look = theme==="dark" ? darkLook : lightLook;
   document.documentElement.dataset.theme=theme;
+  document.documentElement.dataset.palette=look;
   $("thIco").innerHTML=ic(theme==="dark"?"sun":"moon",26);
-  document.querySelector("meta[name=theme-color]").content=theme==="dark"?"#0D1412":"#FFFFFF";
+  document.querySelector("meta[name=theme-color]").content=LOOK_COLOURS[look][0];
   swapBase();
 }
-$("themeBtn").onclick=()=>{theme=theme==="dark"?"light":"dark";LS.set("os.theme", theme);applyTheme();if(view!=="map"&&view!=="wx")renderPage();else renderWx();};
+/* charts and the settings page read the colours when drawn */
+function themeChanged(){ applyTheme(); if(view!=="map"&&view!=="wx") renderPage(); else renderWx(); }
+function setTheme(p){
+  if(p.mode){ themeMode=p.mode; LS.set("os.theme", themeMode); }
+  if(p.light){ lightLook=p.light; LS.set("os.lightLook", lightLook); }
+  if(p.dark){ darkLook=p.dark; LS.set("os.darkLook", darkLook); }
+  themeChanged();
+}
+/* The map's quick switch flips to the other side, keeping the chosen looks. */
+$("themeBtn").onclick=()=>setTheme({mode: theme==="dark"?"light":"dark"});
+sysDark.addEventListener && sysDark.addEventListener("change", ()=>{ if(themeMode==="auto") themeChanged(); });
 $("langBtn").onclick=()=>{lang=LANGS[(LANGS.indexOf(lang)+1)%LANGS.length];LS.set("os.lang", lang);
   document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];renderAll();
   if(view==="map") applyLayer();};
@@ -1792,6 +1949,7 @@ function bindSheet(){
     $("satCC").onchange = e=>{ cfg.maxcc=+e.target.value; saveCfg(); applyLayer(); };
   }
   if($("closeSrc")) $("closeSrc").onclick=closeSheet;
+  if($("infoFaq")) $("infoFaq").onclick=openFaq;
   if($("sheetDone")) $("sheetDone").onclick=closeSheet;
 }
 $("layerPill").onclick=openLayerSheet;
@@ -1799,6 +1957,7 @@ $("layerPill").onclick=openLayerSheet;
 /* sources sheet */
 $("btnInfo").onclick=()=>{
   openSheet(`<h2>${t().srcTitle}</h2>
+    <button class="btn wide" id="infoFaq" style="margin:0 0 16px">${t().faqBtn}</button>
     <table><tr><th>${t().srcWhat}</th><th>${t().srcFrom}</th></tr>
     ${t().srcR.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>
     <div class="card" style="margin-top:16px"><h3>${t().srcT2}</h3>
@@ -2315,6 +2474,28 @@ function evaluatePixel(samples){
   if(m<0.72) return [${PROD_CLASSES[3]},1];
   return [${PROD_CLASSES[4]},1];
 }`;
+function appearanceCard(){
+  const looks = (ls, cur) => `<div class="looks">${ls.map(l=>{ const [bg,card,acc]=LOOK_COLOURS[l];
+    return `<button class="look${l===cur?" on":""}" data-look="${l}" aria-pressed="${l===cur}">
+      <span class="look-prev" style="background:${bg}"><span class="look-card" style="background:${card};color:${DARK_LOOKS.includes(l)?"#fff":"#000"}">
+        <i style="background:${acc}"></i><b></b></span></span>
+      <span class="look-name">${t().looks[l]}</span></button>`; }).join("")}</div>`;
+  return `<div class="card" style="margin-top:14px"><h3>${t().lookT}</h3>
+    <div class="seg" style="margin-top:10px">${[["auto",t().themeAuto],["light",t().themeLight],["dark",t().themeDark]].map(([m,lab])=>
+      `<button class="segb${themeMode===m?" on":""}" data-mode="${m}">${lab}</button>`).join("")}</div>
+    <p class="sub" style="margin-top:8px">${t().themeNote}</p>
+    <div class="looks-title">${t().lightLooks}</div>${looks(LIGHT_LOOKS, lightLook)}
+    <div class="looks-title">${t().darkLooks}</div>${looks(DARK_LOOKS, darkLook)}</div>`;
+}
+/* What the numbers mean, for the questions people actually ask. Each answer
+   folds away so the list reads as questions first. */
+function openFaq(){
+  openSheet(`<h2>${t().faqT}</h2>
+    <div class="faq-say"><small>${t().faqSayL}</small>${t().faqSay}</div>
+    ${t().faq.map(([q,a],i)=>`<details class="faq"${i===0?" open":""}><summary>${q}</summary><div class="a">${a}</div></details>`).join("")}
+    <button class="btn wide alt" id="faqClose" style="margin-top:14px">${t().close}</button>`);
+  $("faqClose").onclick=closeSheet;
+}
 function pgSet(){
   return `<div class="about">
     <img class="about-logo" src="./icon-192.png" alt="" width="64" height="64">
@@ -2326,7 +2507,9 @@ function pgSet(){
     <p class="share-url">${esc(APP_URL.replace(/^https:\/\//,"").replace(/\/$/,""))}</p>
     <button class="btn wide alt" id="shareApp">${t().shareApp}</button>
     <button class="btn wide alt" id="openGuide" style="margin-top:10px">${t().guideBtn}</button>
+    <button class="btn wide alt" id="openFaq" style="margin-top:10px">${t().faqBtn}</button>
   </div>
+  ${appearanceCard()}
   <h1 class="h1">${t().setTitle}</h1><p class="h1sub">${t().setSub}</p>
   <div class="card"><h3>${t().setT1}</h3>
     <ol class="plain">${t().setSteps.map(s=>`<li>${s}</li>`).join("")}</ol>
@@ -2467,6 +2650,15 @@ function bindPage(){
     setTimeout(()=>{ b.textContent=t().shareApp; }, 2400);
   };
   if($("openGuide")) $("openGuide").onclick = ()=>openGuide();
+  if($("openFaq")) $("openFaq").onclick = ()=>openFaq();
+  $("page").querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setTheme({mode:b.dataset.mode}));
+  /* Picking a look on the other side while the mode is fixed switches to
+     that side, so the tap visibly does something (as in AnyScan). */
+  $("page").querySelectorAll("[data-look]").forEach(b=>b.onclick=()=>{
+    const l=b.dataset.look, dark=DARK_LOOKS.includes(l);
+    setTheme(dark ? {dark:l, ...(themeMode==="light"?{mode:"dark"}:{})}
+                  : {light:l, ...(themeMode==="dark"?{mode:"light"}:{})});
+  });
   if($("advOn"))  $("advOn").onclick  = ()=>{ advOpen=true;  renderPage(); };
   if($("advOff")) $("advOff").onclick = ()=>{ advOpen=false; renderPage(); };
   if($("bkCopy")) $("bkCopy").onclick=async()=>{
