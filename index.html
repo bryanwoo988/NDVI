@@ -113,6 +113,9 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 #layerPill{position:fixed;z-index:620;left:50%;transform:translateX(-50%);
   bottom:var(--above);height:54px;border-radius:27px;padding:0 24px;
   display:flex;align-items:center;gap:11px;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+#layerPill .tx{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;white-space:nowrap}
+#layerDate{font-size:11.5px;font-weight:600;opacity:.78;letter-spacing:0;margin-top:1px;
+  max-width:170px;overflow:hidden;text-overflow:ellipsis}
 
 #dot{position:absolute;right:10px;top:10px;width:9px;height:9px;border-radius:50%}
 #dot.ok{background:#4ECB7B}#dot.bad{background:#F08A5D}
@@ -352,7 +355,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 
 <button id="layerPill" class="dark-pill">
   <svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
-  <span id="layerName"></span>
+  <span class="tx"><span id="layerName"></span><small id="layerDate" hidden></small></span>
 </button>
 
 <div id="page" hidden></div>
@@ -429,6 +432,12 @@ zh:{
  mBlankFix:"改成有云也显示",
  moistLo:"干", moistHi:"湿",
  prodSlow:"产能分区要汇总三年的影像，第一次大约要 20 秒…",
+ scPill:"{d} · 云量 {c}%", scProd:"三年平均", scErr:"日期查询失败", scNone:"日期不明",
+ scTitle:"这张图是哪一天的", scAgo:"{n} 天前", scToday:"今天",
+ scLine:"拍摄日期 {d}（{a}），所在图幅云量 {c}%。",
+ scNote:"云量是整个卫星图幅（约 100×100 km）的平均，不是你这块地的。图幅云量低，地块上仍可能有云；有云的像素会留空。",
+ scWin:"在 {f} 到 {t} 这段时间里，挑了最近一次图幅云量不超过 {m}% 的过境。",
+ tCat:"影像日期查询（Catalog API）", tCatN:"找到 {n} 次过境，最近 {d}",
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
  whatsNew:"更新记录", shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
@@ -538,6 +547,12 @@ en:{
  mBlankFix:"Show it with clouds",
  moistLo:"Dry", moistHi:"Wet",
  prodSlow:"Productivity combines three years of imagery — about 20 seconds the first time…",
+ scPill:"{d} · cloud {c}%", scProd:"3-year average", scErr:"Date unavailable", scNone:"Date unknown",
+ scTitle:"When this image was taken", scAgo:"{n} days ago", scToday:"today",
+ scLine:"Captured {d} ({a}); cloud cover of its satellite tile {c}%.",
+ scNote:"Cloud cover is the average over the whole satellite tile (about 100 × 100 km), not your field. A low figure can still leave cloud on the field; cloudy pixels are left blank.",
+ scWin:"Between {f} and {t}, the most recent pass whose tile cloud cover was at most {m}% was used.",
+ tCat:"Image date lookup (Catalog API)", tCatN:"{n} passes found, latest {d}",
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
  whatsNew:"What's new", shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
@@ -647,6 +662,12 @@ ms:{
  mBlankFix:"Tunjuk walaupun berawan",
  moistLo:"Kering", moistHi:"Basah",
  prodSlow:"Produktiviti menggabungkan imej tiga tahun — kira-kira 20 saat kali pertama…",
+ scPill:"{d} · awan {c}%", scProd:"Purata 3 tahun", scErr:"Tarikh gagal dimuat", scNone:"Tarikh tidak diketahui",
+ scTitle:"Bila imej ini diambil", scAgo:"{n} hari lalu", scToday:"hari ini",
+ scLine:"Diambil {d} ({a}); litupan awan jubin satelitnya {c}%.",
+ scNote:"Litupan awan ialah purata seluruh jubin satelit (kira-kira 100 × 100 km), bukan kebun anda. Angka rendah masih boleh ada awan di kebun; piksel berawan dibiarkan kosong.",
+ scWin:"Antara {f} dan {t}, laluan terkini dengan litupan awan jubin tidak melebihi {m}% digunakan.",
+ tCat:"Carian tarikh imej (Catalog API)", tCatN:"{n} laluan dijumpai, terkini {d}",
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
  whatsNew:"Apa yang baharu", shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
@@ -823,6 +844,13 @@ const saveCfg = ()=>{
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
 const RELEASES = [
+  {v:"1.3.0", date:"2026-11-04", notes:{
+    zh:["地图下方的图层按钮会显示这张卫星图的拍摄日期和云量，例如「2026-10-25 · 云量 12%」；点开图层设置可以看到详细说明",
+        "云量指的是整个卫星图幅（约 100×100 km）的平均，不是你这块地的"],
+    en:["The layer button under the map now shows when the satellite image was taken and its cloud cover, e.g. “2026-10-25 · cloud 12%”; open the layer settings for details",
+        "Cloud cover is the average over the whole satellite tile (about 100 × 100 km), not your field"],
+    ms:["Butang lapisan di bawah peta kini menunjukkan tarikh imej satelit diambil dan litupan awannya, contohnya “2026-10-25 · awan 12%”; buka tetapan lapisan untuk butiran",
+        "Litupan awan ialah purata seluruh jubin satelit (kira-kira 100 × 100 km), bukan kebun anda"]}},
   {v:"1.2.0", date:"2026-10-13", notes:{
     zh:["「设置」里的版本号旁边会显示这一版的更新日期和时间"],
     en:["Settings shows the date and time of this update next to the version"],
@@ -1007,7 +1035,67 @@ function activeFill(on){
 }
 function clearSatLayer(){
   if(satLayer){ map.removeLayer(satLayer); satLayer=null; activeFill(true); }
+  scene=null; sceneLabel();
   if(satWarn){ satWarn.remove(); satWarn=null; }
+}
+
+/* Which pass the image on the map is. WMS returns pixels with no date on
+   them, so the same question goes to the Catalog API: the Sentinel-2 L2A
+   passes over this field in the same time range, with the same tile cloud
+   limit as the image. The image is asked for with priority=mostRecent, so
+   the newest of those is the one drawn. Catalog searches cost no
+   processing units; they share the account's request rate limit. */
+let scene = null;                     // {date, cc, from, to, maxcc} | {err} | {none}
+const sceneCache = new Map();
+async function catalogSearch(geometry, from, to){
+  const tk = await getToken();
+  const r = await fetch("https://sh.dataspace.copernicus.eu/api/v1/catalog/1.0.0/search",{
+    method:"POST", headers:{"Content-Type":"application/json", Authorization:"Bearer "+tk},
+    body:JSON.stringify({collections:["sentinel-2-l2a"], intersects:geometry,
+      datetime:from+"T00:00:00Z/"+to+"T23:59:59Z", limit:100})});
+  if(!r.ok) throw new Error("Catalog HTTP "+r.status+" · "+(await r.text()).slice(0,160));
+  const j = await r.json();
+  return (j.features||[]).map(x=>({dt:x.properties&&x.properties.datetime,
+      cc:x.properties&&+x.properties["eo:cloud_cover"]}))
+    .filter(x=>x.dt && isFinite(Date.parse(x.dt)));
+}
+/* Filtered here rather than with a server-side filter, whose syntax differs
+   between catalogue versions; a 30-day window over one field is a few dozen
+   passes at most. */
+function sceneFor(f, from, to, maxcc){
+  const key = f.id+"|"+f.ring.length+"|"+from+"|"+to+"|"+maxcc;
+  if(!sceneCache.has(key)){
+    sceneCache.set(key, catalogSearch({type:"Polygon",coordinates:[f.ring]}, from, to).then(items=>{
+      const ok = items.filter(x=>!isFinite(x.cc) || x.cc<=maxcc)
+                      .sort((a,b)=>Date.parse(b.dt)-Date.parse(a.dt));
+      if(!ok.length) return {none:true};
+      return {date:ymd(new Date(ok[0].dt)), cc:isFinite(ok[0].cc)?Math.round(ok[0].cc):null, from, to, maxcc};
+    }).catch(e=>{ sceneCache.delete(key); return {err:e.message||String(e)}; }));
+  }
+  return sceneCache.get(key);
+}
+function daysAgo(d){
+  const n = Math.round((new Date(ymd(new Date())) - new Date(d))/864e5);
+  return n<=0 ? t().scToday : t().scAgo.replace("{n}", n);
+}
+function sceneLabel(){
+  const el = $("layerDate"); if(!el) return;
+  let txt = "";
+  if(satLayer && layerKey==="PROD") txt = t().scProd;
+  else if(scene && scene.date) txt = t().scPill.replace("{d}",scene.date).replace("{c}",scene.cc==null?"?":scene.cc);
+  else if(scene && scene.err) txt = t().scErr;
+  else if(scene && scene.none) txt = t().scNone;
+  el.textContent = txt; el.hidden = !txt;
+  el.title = scene && scene.err ? scene.err : "";
+}
+function sceneCard(){
+  if(!scene) return "";
+  if(scene.err) return `<p class="sub" style="margin-top:12px"><b>${t().scErr}</b> · ${esc(scene.err)}</p>`;
+  if(!scene.date) return "";
+  return `<div style="margin-top:14px"><h3>${t().scTitle}</h3>
+    <p class="sub">${t().scLine.replace("{d}",scene.date).replace("{a}",daysAgo(scene.date)).replace("{c}",scene.cc==null?"?":scene.cc)}</p>
+    <p class="sub">${t().scWin.replace("{f}",scene.from).replace("{t}",scene.to).replace("{m}",scene.maxcc)}</p>
+    <p class="sub">${t().scNote}</p></div>`;
 }
 
 let satReq = 0;
@@ -1042,10 +1130,15 @@ function applyLayer(){
   /* Productivity averages three years, and that range plus its cloud filter
      live in the CDSE layer itself. Sending time/maxcc here would override
      them and silently reduce it to a single recent scene. */
+  let scP = null;
   if(layerKey !== "PROD"){
     const from = new Date(new Date(satDate).getTime()-satWin*864e5).toISOString().slice(0,10);
     q.set("time", from+"/"+satDate);
     q.set("maxcc", String(effMaxcc()));
+    /* Stated, not left to the CDSE layer's own setting, so the date shown
+       is the pass actually drawn. */
+    q.set("priority", "mostRecent");
+    scP = sceneFor(f, from, satDate, effMaxcc());
   }
   const url = wmsUrl()+"?"+q.toString();
 
@@ -1080,6 +1173,8 @@ function applyLayer(){
     activeFill(false); lyrMsg("");
     setStatus("ok", t().loaded);
     if(cloudAny) showCloudWarn();
+    sceneLabel();
+    if(scP) scP.then(s=>{ if(my!==satReq) return; scene=s; sceneLabel(); refreshSatSheet(); });
   });
 }
 
@@ -1137,6 +1232,11 @@ function wmsFailure(status, raw, retryAfter){
           why:"HTTP "+status+extra+" · "+body.slice(0,200)};
 }
 
+/* the layer sheet, if open, picks up a date that arrived after it opened */
+function refreshSatSheet(){
+  if(!sheetEl.classList.contains("on") || !$("satCard")) return;
+  const y = sheetEl.scrollTop; openLayerSheet(); sheetEl.scrollTop = y;
+}
 function setCloudAny(on){
   cloudAny = !!on; LS.set("os.cloudAny", on?"1":"0");
   applyLayer();
@@ -1450,6 +1550,7 @@ function renderTop(){
   $("fbSub").textContent = f?`${ringAreaHa(f.ring).toFixed(2)} ${t().ha}`
     : (fields.length?`${fields.length} · ${t().season} ${new Date().getFullYear()}`:t().tapToDraw);
   $("layerName").textContent=t().lyr[layerKey];
+  sceneLabel();
   $("srIn").placeholder=t().srchPh;
   $("searchBtn").title=t().srch;
   const lab={searchBtn:t().srch, langBtn:t().langL, themeBtn:t().themeL, btnUndo:t().undo,
@@ -1543,13 +1644,14 @@ function satControls(){
   /* Productivity's three-year range and cloud filter live in the CDSE layer,
      and applyLayer deliberately sends it neither — so date, window and cloud
      controls here would move nothing. Show it only what applies to it. */
-  if(layerKey==="PROD") return `<div class="card" style="margin-top:18px">
+  if(layerKey==="PROD") return `<div class="card" id="satCard" style="margin-top:18px">
     <h3>${t().satTitle}</h3>${legendHtml()}
     <p class="sub" style="margin-top:12px">${t().satNote}</p>
     <p class="src">${t().satSrc}</p></div>
     <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`;
-  return `<div class="card" style="margin-top:18px">
+  return `<div class="card" id="satCard" style="margin-top:18px">
     <h3>${t().satTitle}</h3>
+    ${sceneCard()}
     <label class="f">${t().satDate}</label>
     <div class="row">
       <input type="date" id="satDate" value="${satDate}" max="${isoAgo(0)}" style="flex:2 1 160px">
@@ -2357,6 +2459,16 @@ function bindPage(){
         else if(p.ok)        L.push(`　⚠️ ${k} (${nm}) — ${t().tBlank} · ${p.ms} ms`);
         else                 L.push(`　❌ ${k} (${nm}) — ${p.why}`);
       }
+    }
+
+    if(cfg.proxy || (cfg.clientId&&cfg.clientSecret)){
+      const c=map.getCenter(), d=0.01;
+      const box={type:"Polygon",coordinates:[[[c.lng-d,c.lat-d],[c.lng+d,c.lat-d],[c.lng+d,c.lat+d],[c.lng-d,c.lat+d],[c.lng-d,c.lat-d]]]};
+      try{
+        const it=await catalogSearch(box, isoAgo(30), isoAgo(0));
+        const last=it.map(x=>x.dt).sort().pop();
+        L.push("✅ "+t().tCat+" — "+t().tCatN.replace("{n}",it.length).replace("{d}",last?ymd(new Date(last)):"—"));
+      }catch(e){ L.push("❌ "+t().tCat+" — "+e.message); }
     }
 
     out.innerHTML=`<div class="card"><h3>${t().testTitle}</h3>
