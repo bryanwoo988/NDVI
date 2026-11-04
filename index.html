@@ -311,9 +311,75 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .qr{display:block;width:200px;height:200px;margin:0 auto 14px;padding:10px;border-radius:16px;background:#fff}
 .share-cap{margin:0 0 4px;font-size:14.5px;line-height:1.5}
 .share-url{margin:0 0 14px;font-size:13px;color:var(--mute);word-break:break-all}
+
+/* ---------- first-run guide ---------- */
+.guide-lang{display:flex;gap:6px;margin:-4px 0 14px}
+.guide-lang button{padding:6px 14px;border-radius:999px;background:var(--surf);font-weight:700;font-size:13px;color:var(--mute)}
+.guide-lang button.on{background:var(--chrome);color:var(--chrome-ink)}
+.gstep{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.gstep:last-of-type{border-bottom:none}
+.gstep .gi{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff}
+.gstep .gi svg.i{width:24px;height:24px}
+.gstep b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+.gstep p{margin:0;font-size:14px;line-height:1.55;color:var(--mute)}
+.gline{font-size:15.5px;font-weight:700;line-height:1.5;margin:0 0 6px}
 </style>
+<style id="splash-css">
+/* Splash: shown from the first paint until the app is ready, and while a new
+   build is fetched on open. tools/make-splash.mjs renders the same markup into
+   the iOS launch images, so the hand-off from the home-screen icon is seamless. */
+#splash{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483500;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;padding:0 24px 8vh;
+  background:linear-gradient(160deg,#1E9E58 0%,#13795B 55%,#0E4F4A 100%);color:#fff;text-align:center;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Noto Sans SC","Segoe UI",Roboto,sans-serif;
+  transition:opacity .35s ease,visibility .35s}
+#splash.hide{opacity:0;visibility:hidden}
+.splash-logo{width:120px;height:120px;border-radius:28px;background:#fff;display:grid;place-items:center;
+  box-shadow:0 18px 40px rgba(4,30,22,.35),0 0 0 1px rgba(255,255,255,.35)}
+.splash-logo img{width:100px;height:100px;display:block}
+.splash-name{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.splash-tag{font-size:16px;line-height:22px;margin-top:-8px;color:rgba(255,255,255,.92)}
+.splash-foot{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);left:16px;right:16px;
+  font-size:13px;color:rgba(255,255,255,.85)}
+.splash-upd{min-height:20px;font-size:14px;font-weight:700;opacity:0;transition:opacity .25s}
+.splash-upd.on{opacity:1}
+#splash.animate .splash-logo{animation:splash-pop .55s cubic-bezier(.2,.9,.3,1.2) both}
+#splash.animate .splash-tag,#splash.animate .splash-foot{animation:splash-fade .5s ease .3s both}
+@keyframes splash-pop{from{transform:scale(.82)}}
+@keyframes splash-fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){#splash.animate .splash-logo,#splash.animate .splash-tag,#splash.animate .splash-foot{animation:none}}
+</style>
+<!--SPLASH-LINKS-->
+<link rel="apple-touch-startup-image" href="./splash/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="./splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+<!--/SPLASH-LINKS-->
 </head>
 <body>
+<div id="splash" class="animate" aria-hidden="true">
+  <div class="splash-logo"><img src="./icon-192.png" alt=""></div>
+  <div class="splash-name">NDVI</div>
+  <div class="splash-tag" id="splashTag">卫星每 5 天帮你看一次地</div>
+  <div class="splash-upd" id="splashUpd"></div>
+  <div class="splash-foot" id="splashFoot">免费 · 免注册 · 地块只存在你的手机</div>
+</div>
+<script>
+/* The tagline in the language last chosen, before the app's own strings load. */
+try{
+  var sl=localStorage.getItem("os.lang");
+  var tx=sl==="en"?["Satellite eyes on your field, every 5 days","Free · No sign-up · Fields stay on your phone"]
+        :sl==="ms"?["Satelit memantau kebun anda setiap 5 hari","Percuma · Tiada daftar · Kebun kekal dalam telefon anda"]:null;
+  if(tx){ document.getElementById("splashTag").textContent=tx[0]; document.getElementById("splashFoot").textContent=tx[1]; }
+}catch(e){}
+</script>
 
 <div id="map"></div>
 
@@ -440,7 +506,15 @@ zh:{
  tCat:"影像日期查询（Catalog API）", tCatN:"找到 {n} 次过境，最近 {d}",
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
- whatsNew:"更新记录", shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
+ whatsNew:"更新记录", guideBtn:"使用说明", splashUpd:"发现新版本，正在更新…",
+ guideT:"怎么用这个 App", guideStart:"开始使用",
+ guideLine:"卫星每 5 天帮你看一次地：看长势、看水分、看变化。",
+ guide:[["map","先找到你的地","点上面 🔍 搜地名，或点右边 ➤ 定位到你现在的位置。"],
+        ["pen","画出地块","点右边 ✎，在地图上沿着地块边界一点一点点下去，点 ✓ 完成，再取个名字。"],
+        ["leaf","看长势","点下面的图层按钮，选「长势」。越绿长得越好，黄、红代表稀疏，要去看看。空白是被云挡住，不是没种东西。按钮上会写这张图是哪一天拍的、云量多少。"],
+        ["trend","看变化","「趋势」页看这块地几个月来是变好还是变差，比只看一张图可靠。「天气」页看预报和降雨。"],
+        ["save","记得备份","地块只存在这台手机。到「设置」→「地块备份」复制一份给自己。"]],
+ guideNote:"一格是 10×10 米：适合看一片区域，看不了单棵树。随时可以在「设置」里再打开这份说明。",shareApp:"分享 App 链接", shareText:"Sentinel-2 卫星看地块长势、水分和天气", linkCopied:"链接已复制",
  bkOver:"；已达 {max} 块上限，另有 {n} 块没加入",
  undo:"撤销上一个点", locMe:"定位到我", themeL:"切换深色 / 浅色", langL:"切换语言",
  mNoPU:"这个月的 Sentinel Hub processing unit 用完了。图层要等下个月配额重置，或到 CDSE 后台加购。地块、天气和历史数据不受影响。",
@@ -555,7 +629,15 @@ en:{
  tCat:"Image date lookup (Catalog API)", tCatN:"{n} passes found, latest {d}",
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
- whatsNew:"What's new", shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
+ whatsNew:"What's new", guideBtn:"How to use", splashUpd:"New version found, updating…",
+ guideT:"How to use this app", guideStart:"Get started",
+ guideLine:"A satellite looks at your field every 5 days: growth, moisture and how it changes.",
+ guide:[["map","Find your land","Tap 🔍 at the top to search a place, or ➤ on the right to go to where you are."],
+        ["pen","Draw your field","Tap ✎ on the right, tap the map point by point along the field's edge, tap ✓ to finish and give it a name."],
+        ["leaf","Check growth","Tap the layer button at the bottom and pick “Vegetation”. Greener is better; yellow or red is sparse and worth a look. Blank means cloud, not bare ground. The button shows the day the image was taken and its cloud cover."],
+        ["trend","Watch the change","The Trend page shows whether the field has improved or declined over months, which is more reliable than one image. The Weather page has the forecast and rain."],
+        ["save","Keep a backup","Fields are stored only on this phone. In Settings → Field backup, copy one for yourself."]],
+ guideNote:"One pixel is 10 × 10 m: good for an area, not for a single tree. You can open this guide again from Settings.",shareApp:"Share the app link", shareText:"Field vegetation, moisture and weather from Sentinel-2", linkCopied:"Link copied",
  bkOver:"; {n} more not added ({max}-field limit)",
  undo:"Undo last point", locMe:"Show my location", themeL:"Switch dark / light", langL:"Change language",
  mNoPU:"This month\u2019s Sentinel Hub processing units are used up. Layers return when the quota resets next month, or buy more in the CDSE dashboard. Fields, weather and history still work.",
@@ -670,7 +752,15 @@ ms:{
  tCat:"Carian tarikh imej (Catalog API)", tCatN:"{n} laluan dijumpai, terkini {d}",
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
- whatsNew:"Apa yang baharu", shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
+ whatsNew:"Apa yang baharu", guideBtn:"Cara guna", splashUpd:"Versi baharu dijumpai, sedang dikemas kini…",
+ guideT:"Cara guna aplikasi ini", guideStart:"Mula",
+ guideLine:"Satelit melihat kebun anda setiap 5 hari: pertumbuhan, lembapan dan perubahannya.",
+ guide:[["map","Cari tanah anda","Ketik 🔍 di atas untuk cari tempat, atau ➤ di kanan untuk pergi ke lokasi anda."],
+        ["pen","Lukis kebun","Ketik ✎ di kanan, ketik peta titik demi titik mengikut sempadan kebun, ketik ✓ untuk siap dan beri nama."],
+        ["leaf","Lihat pertumbuhan","Ketik butang lapisan di bawah dan pilih “Tumbuhan”. Lebih hijau lebih baik; kuning atau merah bermaksud jarang dan patut diperiksa. Kosong bermaksud awan, bukan tanah kosong. Butang itu menunjukkan tarikh imej diambil dan litupan awannya."],
+        ["trend","Lihat perubahan","Halaman Trend menunjukkan sama ada kebun bertambah baik atau merosot sepanjang beberapa bulan — lebih boleh dipercayai daripada satu imej. Halaman Cuaca ada ramalan dan hujan."],
+        ["save","Simpan sandaran","Kebun hanya disimpan dalam telefon ini. Di Tetapan → Sandaran kebun, salin satu untuk diri sendiri."]],
+ guideNote:"Satu piksel ialah 10 × 10 m: sesuai untuk satu kawasan, bukan sebatang pokok. Panduan ini boleh dibuka semula di Tetapan.",shareApp:"Kongsi pautan aplikasi", shareText:"Tumbuhan, lembapan dan cuaca kebun daripada Sentinel-2", linkCopied:"Pautan disalin",
  bkOver:"; {n} lagi tidak ditambah (had {max} kebun)",
  undo:"Buang titik terakhir", locMe:"Tunjuk lokasi saya", themeL:"Tukar gelap / cerah", langL:"Tukar bahasa",
  mNoPU:"Unit pemprosesan Sentinel Hub bulan ini telah habis. Lapisan kembali apabila kuota ditetapkan semula bulan depan, atau beli tambahan di papan pemuka CDSE. Kebun, cuaca dan sejarah masih berfungsi.",
@@ -844,6 +934,13 @@ const saveCfg = ()=>{
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
 const RELEASES = [
+  {v:"1.4.0", date:"2026-11-04", notes:{
+    zh:["新增启动画面；打开 App 时如果有新版本，会先显示「发现新版本，正在更新…」，更新好再进 App",
+        "新增简单的使用说明：第一次打开会自动出现，以后在「设置」里点「使用说明」随时可以再看"],
+    en:["New launch screen; if a new version is available when you open the app, it says so and updates before you start",
+        "A short how-to guide: it opens by itself the first time, and any time later from “How to use” in Settings"],
+    ms:["Skrin pembuka baharu; jika ada versi baharu semasa aplikasi dibuka, ia memaklumkan dan mengemas kini dahulu",
+        "Panduan ringkas cara guna: dibuka sendiri kali pertama, dan bila-bila masa dari “Cara guna” di Tetapan"]}},
   {v:"1.3.0", date:"2026-11-04", notes:{
     zh:["地图下方的图层按钮会显示这张卫星图的拍摄日期和云量，例如「2026-10-25 · 云量 12%」；点开图层设置可以看到详细说明",
         "云量指的是整个卫星图幅（约 100×100 km）的平均，不是你这块地的"],
@@ -2228,6 +2325,7 @@ function pgSet(){
     <p class="share-cap">${t().qrCap}</p>
     <p class="share-url">${esc(APP_URL.replace(/^https:\/\//,"").replace(/\/$/,""))}</p>
     <button class="btn wide alt" id="shareApp">${t().shareApp}</button>
+    <button class="btn wide alt" id="openGuide" style="margin-top:10px">${t().guideBtn}</button>
   </div>
   <h1 class="h1">${t().setTitle}</h1><p class="h1sub">${t().setSub}</p>
   <div class="card"><h3>${t().setT1}</h3>
@@ -2368,6 +2466,7 @@ function bindPage(){
     catch(_){ b.textContent=APP_URL; }
     setTimeout(()=>{ b.textContent=t().shareApp; }, 2400);
   };
+  if($("openGuide")) $("openGuide").onclick = ()=>openGuide();
   if($("advOn"))  $("advOn").onclick  = ()=>{ advOpen=true;  renderPage(); };
   if($("advOff")) $("advOff").onclick = ()=>{ advOpen=false; renderPage(); };
   if($("bkCopy")) $("bkCopy").onclick=async()=>{
@@ -2580,8 +2679,65 @@ WhatsNew.init({version:APP_VERSION, releases:RELEASES, key:"os.seenVersion",
 document.addEventListener("click", e=>{
   if(e.target.closest("#whatsNew")){ e.preventDefault(); WhatsNew.history(); }
 });
-/* a page served from the offline copy may be older than the live build */
-setTimeout(checkForUpdate, 1500);
+/* ===================== first-run guide ===================== */
+const GUIDE_BG={map:"#3B82C4",pen:"#FF6A3D",leaf:"#2E8B2E",trend:"#7C5CC4",save:"#5E736B"};
+const GUIDE_IC={map:IC.map, leaf:IC.leaf, trend:IC.trend,
+  pen:`<path d="M16.5 3.8l3.7 3.7L8.4 19.3l-4.6.9.9-4.6z"/>`,
+  save:`<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>`};
+function openGuide(){
+  openSheet(`<h2>${t().guideT}</h2>
+    <div class="guide-lang">${LANGS.map(l=>`<button data-gl="${l}" class="${l===lang?"on":""}">${LL[l]}</button>`).join("")}</div>
+    <p class="gline">${t().guideLine}</p>
+    ${t().guide.map(([k,h,p],i)=>`<div class="gstep"><span class="gi" style="background:${GUIDE_BG[k]}"><svg class="i" viewBox="0 0 24 24">${GUIDE_IC[k]}</svg></span>
+      <span><b>${i+1}. ${h}</b><p>${p}</p></span></div>`).join("")}
+    <p class="sub" style="margin-top:10px">${t().guideNote}</p>
+    <button class="btn wide" id="guideGo" style="margin-top:16px">${t().guideStart}</button>`);
+  /* Someone opening the app for the first time lands in Chinese; let them
+     switch right here instead of hunting for the language button. */
+  sheetEl.querySelectorAll("[data-gl]").forEach(b=>b.onclick=()=>{
+    lang=b.dataset.gl; LS.set("os.lang", lang);
+    document.documentElement.lang={zh:"zh-Hans",en:"en",ms:"ms"}[lang];
+    renderAll(); openGuide(); sheetEl.scrollTop=0;
+  });
+  $("guideGo").onclick=closeSheet;
+  LS.set("os.guideSeen","1");
+}
+
+/* ===================== splash ===================== */
+/* Up from the first paint for at least 0.9 s. On open it also asks the server
+   whether a newer build is live (at most 1.5 s, and not when offline): if so
+   it says so and reloads into it, and the new build then shows what changed.
+   Without this the check ran 1.5 s after the app was already in use, and the
+   reload came out of nowhere. */
+async function bootSplash(){
+  const sp = $("splash"), t0 = performance.now();
+  $("splashTag").textContent = {zh:"卫星每 5 天帮你看一次地",en:"Satellite eyes on your field, every 5 days",
+    ms:"Satelit memantau kebun anda setiap 5 hari"}[lang];
+  let live = null;
+  if(navigator.onLine && location.protocol!=="file:"){
+    lastUpdateCheck = Date.now();
+    live = await Promise.race([liveRevision(), new Promise(r=>setTimeout(()=>r(null),1500))]);
+  }
+  if(newerRevision(document.lastModified, live)){
+    updateReady = live;
+    let tried=null;
+    try{ tried=JSON.parse(sessionStorage.getItem("ndvi:tried")||"null"); }catch(_){}
+    if(mayAutoReload(tried, live, Date.now())){
+      $("splashUpd").textContent = t().splashUpd; $("splashUpd").classList.add("on");
+      try{ const reg="serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+           if(reg) await Promise.race([reg.update(), new Promise(r=>setTimeout(r,1500))]); }catch(_){}
+      await new Promise(r=>setTimeout(r,700));          // long enough to read
+      applyUpdate(false);
+      return;
+    }
+    showUpdateBar();
+  }
+  setTimeout(()=>{
+    sp.classList.add("hide"); setTimeout(()=>sp.remove(), 400);
+    if(WN_NEW && LS.get("os.guideSeen")!=="1") setTimeout(openGuide, 350);
+  }, Math.max(0, 900-(performance.now()-t0)));
+}
+bootSplash();
 
 if("serviceWorker" in navigator && location.protocol!=="file:"){
   /* updateViaCache 'none': the browser's own update checks go to the server
