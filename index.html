@@ -32,7 +32,7 @@
   /* nav sits just above the home indicator, not a full inset below it */
   --gap:0px;
   --nb:0px;
-  --navh:58px;
+  --navh:68px;
   --above:calc(var(--navh) + 12px);
 }
 :root[data-theme=dark]{
@@ -148,13 +148,15 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
    behind it (html is --navbg). An iPhone home-screen app gets a webview
    shorter than the screen; the floating pill this used to be sat above that
    strip and showed it as a blank band. Flush and same-coloured, the strip
-   reads as part of the bar. */
+   reads as part of the bar. Proportions are CompareCast's dock: 24 px icons
+   and small labels with room above and below. At 52-58 px the same content
+   sat cramped and read as too small. */
 #nav{position:fixed;z-index:640;left:0;right:0;bottom:0;
   height:var(--navh);background:var(--navbg);border-top:1px solid var(--line);
-  display:flex;align-items:stretch;padding:0 4px}
+  display:flex;align-items:stretch;padding:6px 6px}
 #nav button{flex:1 1 0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:2px;color:var(--mute);min-width:0}
-#nav button b{font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+  align-items:center;justify-content:center;gap:3px;color:var(--mute);min-width:0}
+#nav button b{font-size:12px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
 #nav button[aria-current=true]{color:var(--good)}
 #nav button[aria-current=true] b{font-weight:800}
 #nav button[aria-current=true] svg.i{stroke-width:2.3}
@@ -1085,6 +1087,10 @@ const saveCfg = ()=>{
    went live, in UTC; the what's-new sheet shows it in the phone's own time.
    1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
+  {v:"1.5.4", date:"2026-11-12", at:"2026-11-11T23:35:00Z", notes:{
+    zh:["底部导航栏调整成和 CompareCast 一样的比例：上下留白多一点，更好看也更好点"],
+    en:["The bottom navigation bar now has the same proportions as CompareCast: more room above and below, easier to read and tap"],
+    ms:["Bar navigasi bawah kini mempunyai nisbah yang sama seperti CompareCast: lebih ruang di atas dan bawah, lebih mudah dibaca dan diketik"]}},
   {v:"1.5.3", date:"2026-11-12", at:"2026-11-11T23:31:00Z", notes:{
     zh:["底部导航栏的图标和文字放大，更容易看、更容易点"],
     en:["Larger icons and labels in the bottom navigation bar, easier to read and tap"],
@@ -1847,7 +1853,7 @@ function renderTop(){
 function renderNav(){
   const ks=["map","fields","trend","wx","set"], icn={map:"map",fields:"fields",trend:"trend",wx:"wx",set:"set"};
   $("nav").innerHTML=ks.map(k=>
-    `<button data-v="${k}" aria-current="${view===k}">${ic(icn[k],25)}<b>${t().nav[k]}</b></button>`).join("");
+    `<button data-v="${k}" aria-current="${view===k}">${ic(icn[k],24)}<b>${t().nav[k]}</b></button>`).join("");
   $("nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{view=b.dataset.v;renderAll();});
 }
 function mapChromeVisible(){
