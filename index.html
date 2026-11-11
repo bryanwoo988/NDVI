@@ -310,15 +310,21 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .wxbadge .stem{width:2px;height:14px;background:#fff;margin:0 auto;opacity:.9}
 
 /* field list rows */
-.frow{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid var(--line);width:100%;text-align:left}
-.frow:last-of-type{border-bottom:none}
+.frw{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+.frw:last-of-type{border-bottom:none}
+.frw.sel{background:var(--surf);border-radius:18px;border-bottom-color:transparent}
+.frow{display:flex;align-items:center;gap:14px;padding:12px 4px;flex:1 1 auto;min-width:0;text-align:left}
+.fmore{flex:0 0 auto;width:48px;height:62px;display:grid;place-items:center;color:var(--mute)}
+.fdef{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;
+  background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.btn.danger{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.btn.danger.sure{background:var(--warn);color:#fff}
 .thumb{width:62px;height:62px;border-radius:16px;background:var(--surf);flex:0 0 auto;
   display:grid;place-items:center;overflow:hidden}
 .frow .tx{flex:1 1 auto;min-width:0}
 .frow .tx b{display:block;font-size:17px;font-weight:700;letter-spacing:-.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frow .tx small{color:var(--mute);font-size:13px}
-.frow.sel{background:var(--surf);border-radius:18px;border-bottom-color:transparent}
 
 /* ---------- update bar ---------- */
 .upd-bar{position:fixed;left:12px;right:12px;bottom:calc(var(--navh) + 10px);z-index:900;
@@ -555,6 +561,7 @@ const IC = {
   sun:`<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2M12 19.4v2M2.6 12h2M19.4 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"/>`,
   moon:`<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>`,
   plus:`<path d="M12 5v14M5 12h14"/>`,
+  more:`<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>`,
   trash:`<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13M9 7V4h6v3"/>`,
   refresh:`<path d="M20 11a8 8 0 1 0-1.5 6"/><path d="M20 5v6h-6"/>`
 };
@@ -646,7 +653,9 @@ zh:{
  lyrSheet:"地图图层", lyr:{OFF:"只看底图",TRUE:"真彩影像",NDVI:"长势",PROD:"产能分区",MOIST:"水分",STREET:"街道图"},
  newFieldQ:"这块地叫什么？", field:"地块",
  drawStart:"点地图加点，点 ✓ 收尾（至少 3 点）", drawMin:"至少要 3 个点", saved:"已存到本机",
- ha:"公顷", lat:"中心纬度", lon:"中心经度", del:"删掉这块地", delQ:"确定删掉？", addField:"画新地块",
+ ha:"公顷", lat:"中心纬度", lon:"中心经度", del:"删掉这块地", delQ:"确定删掉？", delSure:"再点一次，确认删掉",
+ fOpts:"地块选项", fName:"地块名称", fSave:"保存名称", fDefault:"默认", fSetDef:"设为默认地块", fIsDef:"已是默认地块",
+ fDefNote:"每次打开 App，会先显示默认地块。", fRenamed:"名称已保存", addField:"画新地块",
  locating:"定位中…", located:"已定位", locBetter:"正在提高精度…", locCoarse:"精度只有 ±{m} 米。到室外空旷处，并确认手机设置里这个 App 的「精确位置」是开着的。", locFail:"定位失败：", locNo:"这个浏览器不支持定位",
  fieldsTitle:"地块", fieldsSub:"全部存在这台手机里",
  satTitle:"影像设置", satDate:"影像日期", satWin:"在这段天数里，用最近一次云量合格的拍摄",
@@ -794,7 +803,9 @@ en:{
  lyrSheet:"Map layer", lyr:{OFF:"Basemap only",TRUE:"True colour",NDVI:"Vegetation",PROD:"Productivity",MOIST:"Moisture",STREET:"Street map"},
  newFieldQ:"Name this field", field:"Field",
  drawStart:"Tap the map to add points, tap ✓ to close (3 minimum)", drawMin:"Need at least 3 points", saved:"Saved on this device",
- ha:"hectares", lat:"centre lat", lon:"centre lon", del:"Delete this field", delQ:"Delete it?", addField:"Draw a new field",
+ ha:"hectares", lat:"centre lat", lon:"centre lon", del:"Delete this field", delQ:"Delete it?", delSure:"Tap again to delete",
+ fOpts:"Field options", fName:"Field name", fSave:"Save name", fDefault:"Default", fSetDef:"Set as default field", fIsDef:"This is the default field",
+ fDefNote:"The default field is the one shown each time the app opens.", fRenamed:"Name saved", addField:"Draw a new field",
  locating:"Finding you…", located:"Located", locBetter:"Improving accuracy…", locCoarse:"Only accurate to ±{m} m. Step outside, and check that Precise Location is on for this app in your phone settings.", locFail:"Location failed: ", locNo:"No location support in this browser",
  fieldsTitle:"Fields", fieldsSub:"All stored on this device",
  satTitle:"Imagery", satDate:"Image date", satWin:"Uses the most recent pass with acceptable cloud within this many days",
@@ -942,7 +953,9 @@ ms:{
  lyrSheet:"Lapisan peta", lyr:{OFF:"Peta asas sahaja",TRUE:"Warna asli",NDVI:"Tumbuhan",PROD:"Produktiviti",MOIST:"Lembapan",STREET:"Peta jalan"},
  newFieldQ:"Nama kebun ini", field:"Kebun",
  drawStart:"Ketik peta untuk tambah titik, ketik ✓ untuk tutup (minimum 3)", drawMin:"Perlu sekurang-kurangnya 3 titik", saved:"Disimpan dalam peranti ini",
- ha:"hektar", lat:"lat tengah", lon:"lon tengah", del:"Padam kebun ini", delQ:"Padam?", addField:"Lukis kebun baharu",
+ ha:"hektar", lat:"lat tengah", lon:"lon tengah", del:"Padam kebun ini", delQ:"Padam?", delSure:"Ketik sekali lagi untuk padam",
+ fOpts:"Pilihan kebun", fName:"Nama kebun", fSave:"Simpan nama", fDefault:"Lalai", fSetDef:"Jadikan kebun lalai", fIsDef:"Ini kebun lalai",
+ fDefNote:"Kebun lalai dipaparkan setiap kali aplikasi dibuka.", fRenamed:"Nama disimpan", addField:"Lukis kebun baharu",
  locating:"Mencari lokasi…", located:"Lokasi dijumpai", locBetter:"Meningkatkan ketepatan…", locCoarse:"Ketepatan hanya ±{m} m. Keluar ke kawasan lapang, dan pastikan Lokasi Tepat dihidupkan untuk aplikasi ini dalam tetapan telefon.", locFail:"Lokasi gagal: ", locNo:"Pelayar ini tiada sokongan lokasi",
  fieldsTitle:"Kebun", fieldsSub:"Semua disimpan dalam peranti ini",
  satTitle:"Imej satelit", satDate:"Tarikh imej", satWin:"Guna laluan terkini dengan awan yang boleh diterima dalam tempoh ini",
@@ -1063,7 +1076,12 @@ if(!Array.isArray(fields)) fields=[];
   const seen = new Set();
   fields = fields.map(cleanField).filter(f => f && !seen.has(f.id) && seen.add(f.id));
 }
-let activeId = fields[0]?fields[0].id:null;
+/* The field shown when the app opens: the one the user marked as default,
+   else the first. Kept as an id beside the list, so a backup made by an
+   older build still restores. */
+let defaultId = LS.get("os.defaultField");
+const defaultField = ()=>fields.find(f=>f.id===defaultId) || fields[0] || null;
+let activeId = defaultField() ? defaultField().id : null;
 /* Appearance: a mode (auto / light / dark) and one look for each side, as in
    AnyScan. "auto" follows the phone. os.theme used to hold light or dark
    only; a phone that never touched it is now on auto, which is what it did. */
@@ -1095,6 +1113,16 @@ const saveCfg = ()=>{
    went live, in UTC; the what's-new sheet shows it in the phone's own time.
    1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
+  {v:"1.6.0", date:"2026-11-12", at:"2026-11-11T23:59:00Z", notes:{
+    zh:["地块可以改名了：在「地块」页点地块右边的 ⋯",
+        "可以设定默认地块：每次打开 App 会先显示它",
+        "删除地块也移到 ⋯ 里，点两次确认"],
+    en:["Fields can now be renamed: tap the \u22ef beside a field on the Fields page",
+        "You can set a default field: it is the one shown each time the app opens",
+        "Deleting a field has moved into the \u22ef too, with a second tap to confirm"],
+    ms:["Kebun kini boleh dinamakan semula: ketik \u22ef di sebelah kebun pada halaman Kebun",
+        "Anda boleh menetapkan kebun lalai: ia dipaparkan setiap kali aplikasi dibuka",
+        "Memadam kebun juga dipindahkan ke \u22ef, dengan ketikan kedua untuk mengesahkan"]}},
   {v:"1.5.5", date:"2026-11-12", at:"2026-11-11T23:44:00Z", notes:{
     zh:["修好：「未过滤云层」的橙色警告和地图提示条不再浮在地块、趋势、天气、设置页上面",
         "修好：App 放着几天没关，再打开时地图会自动用今天的日期找最新影像，不再停在打开那天",
@@ -2370,12 +2398,15 @@ const warnField=()=>activeField()?"":`<div class="msg info">${t().needField}</di
 function pgFields(){
   return `<h1 class="h1">${t().fieldsTitle}</h1><p class="h1sub">${t().fieldsSub}</p>
   ${fields.length?fields.map(f=>`
-    <button class="frow ${f.id===activeId?"sel":""}" data-f="${f.id}">
+    <div class="frw ${f.id===activeId?"sel":""}">
+    <button class="frow" data-f="${f.id}">
       <span class="thumb">${thumbSvg(f.ring,f.id===activeId?"#FF6A3D":cssv("--mute"))}</span>
-      <span class="tx"><b>${esc(f.name)}</b><small>${ringAreaHa(f.ring).toFixed(2)} ${t().ha}</small></span>
-    </button>`).join(""):`<div class="empty">${t().noField}</div>`}
-  <button class="btn wide" id="goDraw" style="margin-top:22px">${ic("plus",22)}${t().addField}</button>
-  ${activeField()?`<button class="btn wide alt" id="delField" style="margin-top:10px">${ic("trash",22)}${t().del}</button>`:""}`;
+      <span class="tx"><b>${esc(f.name)}</b><small>${ringAreaHa(f.ring).toFixed(2)} ${t().ha}${
+        fields.length>1 && defaultField()===f ? `<span class="fdef">${t().fDefault}</span>` : ""}</small></span>
+    </button>
+    <button class="fmore" data-o="${f.id}" aria-label="${esc(t().fOpts)}">${ic("more",24)}</button>
+    </div>`).join(""):`<div class="empty">${t().noField}</div>`}
+  <button class="btn wide" id="goDraw" style="margin-top:22px">${ic("plus",22)}${t().addField}</button>`;
 }
 function pgTrend(){
   const f=activeField(),K=["NDVI","NDRE","NDMI"];
@@ -2698,6 +2729,45 @@ async function probeLayer(name){
     wmsFailure(r.status, await r.text(), r.headers.get("retry-after")));
 }
 
+/* Rename, make default, delete: one sheet per field, reached from the ⋯ on
+   its row, so any field can be changed without first selecting it (which
+   jumps to the map). The app's own sheet rather than prompt() and confirm():
+   WhatsApp's and Facebook's in-app browsers answer those without showing
+   them, which made delete do nothing there. */
+function fieldSheet(id){
+  const f = fields.find(x=>x.id===id); if(!f) return;
+  const isDef = defaultField()===f;
+  openSheet(`<h2>${t().fOpts}</h2>
+    <label class="f" for="fName" style="margin-top:0">${t().fName}</label>
+    <input type="text" id="fName" maxlength="60" value="${esc(f.name)}" autocomplete="off" enterkeyhint="done">
+    <button class="btn wide" id="fSave" style="margin-top:10px">${t().fSave}</button>
+    <button class="btn wide alt" id="fDef" style="margin-top:18px" ${isDef?"disabled":""}>${isDef?t().fIsDef:t().fSetDef}</button>
+    <p class="sub" style="margin-top:8px">${t().fDefNote}</p>
+    <button class="btn wide danger" id="fDel" style="margin-top:18px">${ic("trash",22)}<span>${t().del}</span></button>`);
+  const after = ()=>{ renderTop(); if(view==="fields") renderPage(); };
+  const save = ()=>{
+    const name = $("fName").value.trim().slice(0,60);
+    if(!name){ $("fName").value = f.name; return; }
+    f.name = name; saveFields(); setStatus("ok", t().fRenamed);
+    closeSheet(); after();
+    if(view==="wx") renderWx();
+  };
+  $("fSave").onclick = save;
+  $("fName").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); save(); } });
+  $("fDef").onclick = ()=>{ defaultId = f.id; LS.set("os.defaultField", f.id); closeSheet(); after(); };
+  /* two taps instead of a confirm box */
+  $("fDel").onclick = ()=>{
+    const b = $("fDel");
+    if(!b.classList.contains("sure")){ b.classList.add("sure"); b.querySelector("span").textContent = t().delSure; return; }
+    const wasActive = f.id===activeId;
+    fields = fields.filter(x=>x.id!==f.id);
+    saveFields(); closeSheet();
+    if(wasActive){ activeId = defaultField() ? defaultField().id : null; onFieldChange(); }
+    else drawFields(false);
+    after();
+  };
+}
+
 /* ===================== page bindings ===================== */
 function bindPage(){
   $("page").querySelectorAll(".frow").forEach(b=>b.onclick=()=>{
@@ -2706,11 +2776,7 @@ function bindPage(){
     if(fieldLayers[i]) map.fitBounds(fieldLayers[i].getBounds(),{padding:[60,60],maxZoom:17});
   });
   if($("goDraw")) $("goDraw").onclick=()=>{ view="map"; renderAll(); if(!drawing) $("btnDraw").click(); };
-  if($("delField")) $("delField").onclick=()=>{
-    if(!confirm(t().delQ)) return;
-    fields=fields.filter(f=>f.id!==activeId); activeId=fields[0]?fields[0].id:null;
-    saveFields(); onFieldChange(); renderPage(); renderTop();
-  };
+  $("page").querySelectorAll(".fmore").forEach(b=>b.onclick=()=>fieldSheet(b.dataset.o));
   /* The chart below belongs to the index and period it was fetched for. Left
      in place after a change, NDVI numbers sat under an NDRE heading. */
   if($("idxPick")) $("idxPick").onchange=e=>{idxState.index=e.target.value;series={rows:[],err:null,busy:false};renderPage();};
