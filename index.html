@@ -122,7 +122,8 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 #fieldBtn .tx{flex:1 1 auto;min-width:0}
 #fieldBtn .tx b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
-#fieldBtn .tx small{font-size:12.5px;opacity:.72;display:block;line-height:1.3}
+#fieldBtn .tx small{font-size:12.5px;opacity:.72;display:block;line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 #rightcol{position:fixed;z-index:620;right:14px;display:flex;flex-direction:column;gap:10px;
   bottom:var(--above)}
@@ -336,6 +337,7 @@ ul.plain,ol.plain{margin:10px 0 0;padding-left:19px;font-size:14px;line-height:1
 .about-logo{display:block;margin:0 auto 10px;border-radius:16px;box-shadow:var(--sh-s)}
 .about-name{font-size:22px;font-weight:800;letter-spacing:-.02em}
 .about-ver{font-size:12.5px;color:var(--mute);margin-top:2px}
+.about-ver a{color:var(--accent);font-weight:700;text-decoration:none}
 .credit{margin:10px 0 16px;font-size:15px;font-weight:600;letter-spacing:.3px}
 /* white all round the code: scanners need the quiet zone, and dark mode must not invert it */
 .qr{display:block;width:200px;height:200px;margin:0 auto 14px;padding:10px;border-radius:16px;background:#fff}
@@ -571,6 +573,7 @@ zh:{
  scLine:"拍摄日期 {d}（{a}），所在图幅云量 {c}%。",
  scNote:"云量是整个卫星图幅（约 100×100 km）的平均，不是你这块地的。图幅云量低，地块上仍可能有云；有云的像素会留空。",
  scWin:"在 {f} 到 {t} 这段时间里，挑了最近一次图幅云量不超过 {m}% 的过境。",
+ scWinAny:"在 {f} 到 {t} 这段时间里，用了最近一次过境，没有过滤云量。",
  tCat:"影像日期查询（Catalog API）", tCatN:"找到 {n} 次过境，最近 {d}",
  updReady:"新版本已准备好", updNow:"立即更新", updLater:"稍后", version:"版本",
  qrCap:"扫描二维码，就能用手机浏览器直接打开这个 App", qrAlt:"打开这个 App 的二维码",
@@ -621,6 +624,7 @@ zh:{
  setT8:"长势 / 水分图层脚本（选用）",
  scriptNote:"图例上的颜色是照这两段脚本画的。如果你 CDSE 里那两层用的是模板自带的脚本，颜色可能对不上图例。把这两段贴进对应图层，画面和图例就会完全一致，而且加了 SCL 云遮罩，有云的像素直接留白而不是上色。",
  wxErr:"这个位置没有逐小时预报资料",
+ offline:"没有网络连接。等有信号后再试一次。",
  seeMap:"看地图",
  secShow:"显示 / 隐藏 Secret",
  tMissing:"配置里找不到这几个图层名：", tAllMatch:"四个图层名都对得上",
@@ -645,7 +649,7 @@ zh:{
  ha:"公顷", lat:"中心纬度", lon:"中心经度", del:"删掉这块地", delQ:"确定删掉？", addField:"画新地块",
  locating:"定位中…", located:"已定位", locBetter:"正在提高精度…", locCoarse:"精度只有 ±{m} 米。到室外空旷处，并确认手机设置里这个 App 的「精确位置」是开着的。", locFail:"定位失败：", locNo:"这个浏览器不支持定位",
  fieldsTitle:"地块", fieldsSub:"全部存在这台手机里",
- satTitle:"影像设置", satDate:"影像日期", satWin:"在这段天数里挑云最少的一景",
+ satTitle:"影像设置", satDate:"影像日期", satWin:"在这段天数里，用最近一次云量合格的拍摄",
  days:"天", maxcc:"云量上限", rampLo:"裸土 · 枯", rampHi:"浓密冠层",
  satNote:"成龄果树冠层浓密，NDVI 容易饱和。看同一地块不同日期的「变化」，比看绝对数值有用。",
  satSrc:"影像：Copernicus Sentinel-2 L2A，10 m，重访 3–5 天，由 Sentinel Hub 在 Copernicus Data Space Ecosystem 上实时处理。云掩膜用 SCL 场景分类波段。",
@@ -717,6 +721,7 @@ en:{
  scLine:"Captured {d} ({a}); cloud cover of its satellite tile {c}%.",
  scNote:"Cloud cover is the average over the whole satellite tile (about 100 × 100 km), not your field. A low figure can still leave cloud on the field; cloudy pixels are left blank.",
  scWin:"Between {f} and {t}, the most recent pass whose tile cloud cover was at most {m}% was used.",
+ scWinAny:"Between {f} and {t}, the most recent pass was used, with no cloud filter.",
  tCat:"Image date lookup (Catalog API)", tCatN:"{n} passes found, latest {d}",
  updReady:"A new version is ready", updNow:"Update now", updLater:"Later", version:"Version",
  qrCap:"Scan to open this app straight in a phone browser", qrAlt:"QR code that opens this app",
@@ -767,6 +772,7 @@ en:{
  setT8:"Vegetation / moisture layer scripts (optional)",
  scriptNote:"The legend colours are drawn from these two scripts. If your CDSE layers still use the template scripts, the colours may not match the legend. Paste these into the matching layers and the two will agree exactly. They also add SCL cloud masking, so cloudy pixels are left blank instead of coloured.",
  wxErr:"No hourly forecast for this location",
+ offline:"No internet connection. Try again when you have signal.",
  seeMap:"See the map",
  secShow:"Show / hide secret",
  tMissing:"Not present in the configuration: ", tAllMatch:"All four layer names match",
@@ -791,7 +797,7 @@ en:{
  ha:"hectares", lat:"centre lat", lon:"centre lon", del:"Delete this field", delQ:"Delete it?", addField:"Draw a new field",
  locating:"Finding you…", located:"Located", locBetter:"Improving accuracy…", locCoarse:"Only accurate to ±{m} m. Step outside, and check that Precise Location is on for this app in your phone settings.", locFail:"Location failed: ", locNo:"No location support in this browser",
  fieldsTitle:"Fields", fieldsSub:"All stored on this device",
- satTitle:"Imagery", satDate:"Image date", satWin:"Pick the least cloudy scene within",
+ satTitle:"Imagery", satDate:"Image date", satWin:"Uses the most recent pass with acceptable cloud within this many days",
  days:"days", maxcc:"Max cloud", rampLo:"Bare · dry", rampHi:"Dense canopy",
  satNote:"Mature tree canopies are dense, so NDVI saturates. Track the change between dates on the same field rather than the absolute number.",
  satSrc:"Imagery: Copernicus Sentinel-2 L2A, 10 m, 3–5 day revisit, processed live by Sentinel Hub on the Copernicus Data Space Ecosystem. Cloud masking uses the SCL scene classification band.",
@@ -863,6 +869,7 @@ ms:{
  scLine:"Diambil {d} ({a}); litupan awan jubin satelitnya {c}%.",
  scNote:"Litupan awan ialah purata seluruh jubin satelit (kira-kira 100 × 100 km), bukan kebun anda. Angka rendah masih boleh ada awan di kebun; piksel berawan dibiarkan kosong.",
  scWin:"Antara {f} dan {t}, laluan terkini dengan litupan awan jubin tidak melebihi {m}% digunakan.",
+ scWinAny:"Antara {f} dan {t}, laluan terkini digunakan, tanpa penapisan awan.",
  tCat:"Carian tarikh imej (Catalog API)", tCatN:"{n} laluan dijumpai, terkini {d}",
  updReady:"Versi baharu sudah sedia", updNow:"Kemas kini", updLater:"Nanti", version:"Versi",
  qrCap:"Imbas untuk membuka aplikasi ini terus dalam pelayar telefon", qrAlt:"Kod QR untuk membuka aplikasi ini",
@@ -909,6 +916,7 @@ ms:{
  maxFields:"Maksimum {max} kebun. Padam satu sebelum tambah yang baharu.",
  mQuota:"Permintaan ditolak",
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
+ offline:"Tiada sambungan internet. Cuba lagi apabila ada isyarat.",
  seeMap:"Lihat peta",
  secShow:"Papar / sembunyi secret",
  rate429:"Dihadkan kadar (terlalu banyak permintaan seminit). Tunggu seminit sebelum cuba lagi.",
@@ -937,7 +945,7 @@ ms:{
  ha:"hektar", lat:"lat tengah", lon:"lon tengah", del:"Padam kebun ini", delQ:"Padam?", addField:"Lukis kebun baharu",
  locating:"Mencari lokasi…", located:"Lokasi dijumpai", locBetter:"Meningkatkan ketepatan…", locCoarse:"Ketepatan hanya ±{m} m. Keluar ke kawasan lapang, dan pastikan Lokasi Tepat dihidupkan untuk aplikasi ini dalam tetapan telefon.", locFail:"Lokasi gagal: ", locNo:"Pelayar ini tiada sokongan lokasi",
  fieldsTitle:"Kebun", fieldsSub:"Semua disimpan dalam peranti ini",
- satTitle:"Imej satelit", satDate:"Tarikh imej", satWin:"Pilih imej paling kurang awan dalam",
+ satTitle:"Imej satelit", satDate:"Tarikh imej", satWin:"Guna laluan terkini dengan awan yang boleh diterima dalam tempoh ini",
  days:"hari", maxcc:"Had awan", rampLo:"Tanah kosong", rampHi:"Kanopi tebal",
  satNote:"Kanopi pokok matang sangat tebal, jadi NDVI cepat tepu. Lihat perubahan antara tarikh pada kebun yang sama, bukan nilai mutlak.",
  satSrc:"Imej: Copernicus Sentinel-2 L2A, 10 m, ulangan 3–5 hari, diproses langsung oleh Sentinel Hub di Copernicus Data Space Ecosystem. Topeng awan guna jalur SCL.",
@@ -1087,6 +1095,22 @@ const saveCfg = ()=>{
    went live, in UTC; the what's-new sheet shows it in the phone's own time.
    1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
+  {v:"1.5.5", date:"2026-11-12", at:"2026-11-11T23:44:00Z", notes:{
+    zh:["修好：「未过滤云层」的橙色警告和地图提示条不再浮在地块、趋势、天气、设置页上面",
+        "修好：App 放着几天没关，再打开时地图会自动用今天的日期找最新影像，不再停在打开那天",
+        "修好：把影像日期清空不会再让图层消失",
+        "没有网络时，会直接写「没有网络连接」，不再显示看不懂的错误",
+        "上方地块按钮的面积不再折成两行；天气图标和文字说明一致；图层说明的用词更准确"],
+    en:["Fixed: the orange \u201cclouds not filtered\u201d warning and the map banner no longer float over the Fields, Trends, Weather and Settings pages",
+        "Fixed: an app left open for days now looks for the latest image up to today when you come back, instead of staying on the day it was opened",
+        "Fixed: clearing the image date no longer makes the layer disappear",
+        "With no internet, the app now says \u201cNo internet connection\u201d instead of a technical error",
+        "The field button at the top keeps the area on one line; the weather icon matches its description; clearer wording in the layer settings"],
+    ms:["Dibaiki: amaran jingga \u201cawan tidak ditapis\u201d dan sepanduk peta tidak lagi terapung di atas halaman Kebun, Trend, Cuaca dan Tetapan",
+        "Dibaiki: aplikasi yang dibiarkan terbuka berhari-hari kini mencari imej terkini sehingga hari ini apabila dibuka semula, bukan kekal pada hari ia dibuka",
+        "Dibaiki: mengosongkan tarikh imej tidak lagi menghilangkan lapisan",
+        "Tanpa internet, aplikasi kini memaparkan \u201cTiada sambungan internet\u201d dan bukan ralat teknikal",
+        "Butang kebun di atas mengekalkan keluasan dalam satu baris; ikon cuaca sepadan dengan penerangannya; perkataan lebih jelas dalam tetapan lapisan"]}},
   {v:"1.5.4", date:"2026-11-12", at:"2026-11-11T23:35:00Z", notes:{
     zh:["底部导航栏调整成和 CompareCast 一样的比例：上下留白多一点，更好看也更好点"],
     en:["The bottom navigation bar now has the same proportions as CompareCast: more room above and below, easier to read and tap"],
@@ -1259,6 +1283,16 @@ let fieldLayers=[], draftLayer=null, draftDots=[], drawing=false, draftPts=[];
 const wmsUrl = ()=>cfg.instanceId?`https://sh.dataspace.copernicus.eu/ogc/wms/${cfg.instanceId}`:null;
 
 let satDate = ymd(new Date()), satWin = 30;
+/* True until the user picks an earlier date. A home-screen app is resumed for
+   days without a reload, and "today" was fixed at launch: the map went on
+   showing the window that ended the day the app was opened. */
+let satAuto = true;
+function satDateCatchUp(){
+  const today = ymd(new Date());
+  if(!satAuto || satDate===today) return;
+  satDate = today;
+  if(!drawing) applyLayer();
+}
 /* Layers that come from Sentinel Hub and therefore cost processing units.
    Each one is drawn only inside the selected field, never across the map. */
 const SAT_LAYERS = ["NDVI","PROD","MOIST","TRUE"];
@@ -1373,7 +1407,7 @@ function sceneCard(){
   if(!scene.date) return "";
   return `<div style="margin-top:14px"><h3>${t().scTitle}</h3>
     <p class="sub">${t().scLine.replace("{d}",scene.date).replace("{a}",daysAgo(scene.date)).replace("{c}",scene.cc==null?"?":scene.cc)}</p>
-    <p class="sub">${t().scWin.replace("{f}",scene.from).replace("{t}",scene.to).replace("{m}",scene.maxcc)}</p>
+    <p class="sub">${(scene.maxcc>=100?t().scWinAny:t().scWin).replace("{f}",scene.from).replace("{t}",scene.to).replace("{m}",scene.maxcc)}</p>
     <p class="sub">${t().scNote}</p></div>`;
 }
 
@@ -1467,7 +1501,9 @@ async function getImage(url){
   }
   let r;
   try{ r = await fetch(url); }
-  catch(e){ return {ok:false, why:"network: "+(e.message||e)}; }
+  /* Out in a field the usual failure is no signal. "network: Failed to
+     fetch" (or a guess about CORS) told the user nothing they could act on. */
+  catch(e){ return {ok:false, why: navigator.onLine===false ? t().offline : "network: "+(e.message||e)}; }
   const ct = r.headers.get("content-type")||"";
   if(r.ok && ct.indexOf("image")===0){
     const b = await r.blob();
@@ -1532,6 +1568,7 @@ function showCloudWarn(){
   satWarn = document.createElement("div");
   satWarn.id = "cloudWarn";
   satWarn.textContent = "⚠ "+t().cloudWarn;
+  satWarn.hidden = view!=="map";
   document.body.appendChild(satWarn);
 }
 function drawFields(fit){
@@ -1600,6 +1637,7 @@ async function getToken(){
   let r;
   try{ r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});
   }catch(e){
+    if(navigator.onLine===false) throw new Error(t().offline);
     /* Say which host we actually tried. "Load failed" alone cannot tell you
        whether the proxy is in use or the request went straight to CDSE. */
     const via = cfg.proxy ? ("proxy: "+url) : "DIRECT to identity.dataspace.copernicus.eu (no proxy set)";
@@ -1659,7 +1697,10 @@ async function fetchWeather(){
     hourly:"temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,"+
            "soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm",
     daily:"precipitation_sum,et0_fao_evapotranspiration",timezone:"auto",forecast_days:"14"}).toString();
-  const r=await fetch(u); if(!r.ok) throw new Error("Open-Meteo HTTP "+r.status);
+  let r;
+  try{ r=await fetch(u); }
+  catch(e){ throw new Error(navigator.onLine===false ? t().offline : "Open-Meteo: "+(e.message||e)); }
+  if(!r.ok) throw new Error("Open-Meteo HTTP "+r.status);
   const j=await r.json();
   return {j,lat,lon};
 }
@@ -1807,7 +1848,10 @@ document.getElementById("sheetX").onclick=closeSheet;
 /* ===================== helpers ===================== */
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const isoAgo=n=>ymd(new Date(Date.now()-n*864e5));
-const isoMonthsAgo=n=>{const d=new Date();d.setMonth(d.getMonth()-n);return ymd(d);};
+/* The 31st minus a month is not the 31st of a 30-day month: setMonth alone
+   rolled that over into the month after. Clamp to the target month's end. */
+const isoMonthsAgo=n=>{const d=new Date(),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()-n);
+  d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return ymd(d);};
 const $=id=>document.getElementById(id);
 
 /* ===================== chrome render ===================== */
@@ -1839,7 +1883,9 @@ function renderTop(){
   $("langBtn").textContent=LL[lang];
   const f=activeField();
   $("fbName").textContent = f?f.name:t().allFields;
-  $("fbSub").textContent = f?`${ringAreaHa(f.ring).toFixed(2)} ${t().ha}`
+  /* "ha", not "hectares": spelled out, the area wrapped onto a third line
+     in the narrow pill beside three round buttons */
+  $("fbSub").textContent = f?`${ringAreaHa(f.ring).toFixed(2)} ${lang==="zh"?t().ha:"ha"}`
     : (fields.length?`${fields.length} · ${t().season} ${new Date().getFullYear()}`:t().tapToDraw);
   $("layerName").textContent=t().lyr[layerKey];
   sceneLabel();
@@ -1863,7 +1909,13 @@ function mapChromeVisible(){
   $("rightcol").style.display=onMap?"":"none";
   $("rightcol").classList.toggle("wx", w);
   $("layerPill").style.display=m?"":"none";
+  /* Both sit above the pages in z-order. The cloud warning used to float
+     over Fields, Trends, Weather and Settings, and a layer message raised
+     while one of those was open (saving settings, a slow layer finishing)
+     landed on top of it. They belong to the map and show only there. */
   if(!m) lyrMsg("");
+  $("lyrMsg").hidden = !m;
+  if(satWarn) satWarn.hidden = !m;
   $("btnDraw").hidden = !m;
   $("btnRadar").hidden=!w;
   $("btnRadar").classList.toggle("on",radarOn);
@@ -1978,7 +2030,16 @@ function bindSheet(){
        picked a layer and then could not see whether anything had changed. */
     closeSheet();
   });
-  if($("satDate")) $("satDate").onchange=e=>{satDate=e.target.value;applyLayer();};
+  /* iOS lets the date box be cleared; an empty date used to throw inside
+     applyLayer and leave the map without its layer. Empty, or today or
+     later, means "latest". */
+  if($("satDate")) $("satDate").onchange=e=>{
+    const v=e.target.value, today=ymd(new Date());
+    satAuto = !/^\d{4}-\d{2}-\d{2}$/.test(v) || v>=today;
+    satDate = satAuto ? today : v;
+    if(e.target.value!==satDate) e.target.value=satDate;
+    applyLayer();
+  };
   if($("satWin"))  $("satWin").onchange =e=>{satWin=+e.target.value;applyLayer();};
   /* Rebuilding the sheet here reopened it on every drag, so it could never be
      dismissed. Update the label in place instead and leave the sheet alone. */
@@ -2351,7 +2412,9 @@ const hhmm=s=>s.slice(11,16);
 function wcLabel(code){ return t().wc[code] ?? "—"; }
 function wcIcon(code,mm){
   if([95,96,99].includes(code)) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M7 15h9a3.6 3.6 0 0 0 .4-7.2A5.6 5.6 0 0 0 5.4 9 3.1 3.1 0 0 0 6 15z"/><path d="M13 14l-3 5h4l-2.5 4"/></svg>`;
-  if(code>=51||mm>0) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M7 15h9a3.6 3.6 0 0 0 .4-7.2A5.6 5.6 0 0 0 5.4 9 3.1 3.1 0 0 0 6 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/></svg>`;
+  /* by the weather code alone, like the label next to it: with "or any rain"
+     a 0.1 mm hour drew a rain cloud beside the words "Mostly clear" */
+  if(code>=51) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M7 15h9a3.6 3.6 0 0 0 .4-7.2A5.6 5.6 0 0 0 5.4 9 3.1 3.1 0 0 0 6 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/></svg>`;
   if(code>=45&&code<=48) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M4 9h16M4 13h16M6 17h12"/></svg>`;
   if(code>=2) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M7 17h9a4 4 0 0 0 .4-7.98A6 6 0 0 0 5.2 10.3 3.4 3.4 0 0 0 6 17z"/></svg>`;
   return ic("sun",22);
@@ -2660,7 +2723,8 @@ function bindPage(){
       mine.rows=rows; mine.busy=false;
       if(!rows.length){mine.err=t().noClear;setStatus("bad",t().noClear);}
       else setStatus("ok",t().got+rows.length);
-    }catch(e){ if(series!==mine) return; mine.busy=false;mine.err=e.message;setStatus("bad",e.message);}
+    }catch(e){ if(series!==mine) return; mine.busy=false;
+      mine.err = navigator.onLine===false ? t().offline : e.message; setStatus("bad",mine.err);}
     /* only this page: re-rendering Settings would wipe what is being typed */
     if(view==="trend") renderPage();
   };
@@ -2886,6 +2950,7 @@ document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible") return;
   visibleSince=Date.now();
   if(view==="wx") ensureWeather();
+  satDateCatchUp();
   if(updateReady) actOnUpdate(); else checkForUpdate();
 });
 setInterval(()=>{ if(document.visibilityState==="visible") checkForUpdate(); }, 15*60e3);
