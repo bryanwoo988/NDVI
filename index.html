@@ -32,7 +32,7 @@
   /* nav sits just above the home indicator, not a full inset below it */
   --gap:0px;
   --nb:0px;
-  --navh:70px;
+  --navh:64px;
   --above:calc(var(--navh) + 12px);
 }
 :root[data-theme=dark]{
@@ -126,6 +126,10 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 
 #rightcol{position:fixed;z-index:620;right:14px;display:flex;flex-direction:column;gap:10px;
   bottom:var(--above)}
+/* On the weather view the forecast card and hourly strip take the bottom of
+   the map; the buttons sat on top of them and covered the last cells. They
+   now stand above the strip, whatever height it turns out to be. */
+#rightcol.wx{bottom:calc(var(--above) + var(--wxh,232px) + 14px)}
 
 #layerPill{position:fixed;z-index:620;left:50%;transform:translateX(-50%);
   bottom:var(--above);height:54px;border-radius:27px;padding:0 24px;
@@ -140,13 +144,20 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
 @keyframes pl{50%{opacity:.2}}
 
 /* ---------- bottom nav ---------- */
-#nav{position:fixed;z-index:640;left:8px;right:8px;bottom:0;
-  height:var(--navh);border-radius:36px;background:var(--bg);box-shadow:var(--sh);
-  border:1px solid var(--line);display:flex;align-items:center;padding:0 6px}
-#nav button{flex:1 1 0;height:60px;border-radius:30px;display:flex;flex-direction:column;
+/* Docked edge to edge, as in CompareCast, and the same colour as the page
+   behind it (html is --navbg). An iPhone home-screen app gets a webview
+   shorter than the screen; the floating pill this used to be sat above that
+   strip and showed it as a blank band. Flush and same-coloured, the strip
+   reads as part of the bar. */
+#nav{position:fixed;z-index:640;left:0;right:0;bottom:0;
+  height:var(--navh);background:var(--navbg);border-top:1px solid var(--line);
+  display:flex;align-items:stretch;padding:0 4px}
+#nav button{flex:1 1 0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;color:var(--mute);min-width:0}
 #nav button b{font-size:11.5px;font-weight:600;letter-spacing:-.01em}
-#nav button[aria-current=true]{background:var(--surf);color:var(--good)}
+#nav button[aria-current=true]{color:var(--good)}
+#nav button[aria-current=true] b{font-weight:800}
+#nav button[aria-current=true] svg.i{stroke-width:2.3}
 
 /* ---------- pages ---------- */
 #page{position:fixed;z-index:600;top:0;left:0;right:0;bottom:0;
@@ -1071,6 +1082,13 @@ const saveCfg = ()=>{
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
 const RELEASES = [
+  {v:"1.5.1", date:"2026-11-11", notes:{
+    zh:["底部导航栏改成贴到屏幕最底的整条样式，下面不再露出一条空白",
+        "天气页：右边的按钮不再挡住天气卡片和逐小时预报"],
+    en:["The bottom navigation bar now runs edge to edge down to the bottom of the screen, with no blank strip under it",
+        "Weather page: the buttons on the right no longer cover the weather card and the hourly forecast"],
+    ms:["Bar navigasi bawah kini memenuhi lebar skrin hingga ke bahagian paling bawah, tanpa jalur kosong di bawahnya",
+        "Halaman cuaca: butang di sebelah kanan tidak lagi menutup kad cuaca dan ramalan setiap jam"]}},
   {v:"1.5.0", date:"2026-11-04", notes:{
     zh:["「设置」新增「外观」：可选跟随系统、浅色或深色，浅色和深色各有 4 种主题（经典、纸张、薄荷、薰衣草；午夜、纯黑 OLED、石板、葡萄）",
         "新增「数据怎么看？」：用问答解释长势和水分代表什么、颜色怎么判断、图是哪一天的、最多能看多久以前、空白代表什么。在「设置」和地图的 ⓘ 里都能打开"],
@@ -1823,6 +1841,7 @@ function mapChromeVisible(){
   $("topbar").style.display=onMap?"":"none";
   if(!onMap) srOpen(false);
   $("rightcol").style.display=onMap?"":"none";
+  $("rightcol").classList.toggle("wx", w);
   $("layerPill").style.display=m?"":"none";
   if(!m) lyrMsg("");
   $("btnDraw").hidden = !m;
@@ -2317,6 +2336,10 @@ function wcIcon(code,mm){
   if(code>=2) return `<svg class="i" viewBox="0 0 24 24" style="width:22px"><path d="M7 17h9a4 4 0 0 0 .4-7.98A6 6 0 0 0 5.2 10.3 3.4 3.4 0 0 0 6 17z"/></svg>`;
   return ic("sun",22);
 }
+if(window.ResizeObserver) new ResizeObserver(()=>{
+  const h=$("wxwrap").offsetHeight;
+  if(h) document.documentElement.style.setProperty("--wxh", h+"px");
+}).observe($("wxwrap"));
 function renderWx(){
   const wrap=$("wxwrap");
   if(view!=="wx"){ if(wxMarker){map.removeLayer(wxMarker);wxMarker=null;} return; }
