@@ -5,7 +5,8 @@
    app moved. Self-contained: no dependencies, its own styles, works offline.
 
    Each app keeps its release list next to its code, newest first:
-     { v: '1.2.0', date: '2026-10-13', notes: { zh: [...], en: [...], ms: [...] } }
+     { v: '1.2.0', date: '2026-10-13', at: '2026-10-13T02:54:00Z', notes: { zh: [...], en: [...], ms: [...] } }
+   (at is optional: the moment the release went live, in UTC; shown in local time.)
    (zht for 繁體 is optional and falls back to zh; a missing language falls
    back to en, then zh.)
 
@@ -111,12 +112,18 @@
 
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-  // When this build went live: index.html's Last-Modified, local time.
-  function updatedAt() {
-    var d = new Date(document.lastModified);
+  function stamp(d) {
     if (!isFinite(d)) return '';
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
+
+  // When this build went live: index.html's Last-Modified, local time.
+  function updatedAt() { return stamp(new Date(document.lastModified)); }
+
+  // When a release went live, for the list: its `at` (an ISO instant, e.g.
+  // '2026-11-11T23:06:00Z') in the phone's own time, so the day is right in
+  // every time zone; a release without one shows its plain `date`.
+  function releasedAt(r) { return (r.at && stamp(new Date(r.at))) || r.date || ''; }
 
   function offerUpdate(apply) {
     if (document.querySelector('.wn-bar')) return;
@@ -180,7 +187,7 @@
     var body = el('div', 'wn-list');
     list.forEach(function (r) {
       var head = el('div', 'wn-ver', 'v' + r.v);
-      if (r.date) head.appendChild(el('span', null, r.date));
+      if (releasedAt(r)) head.appendChild(el('span', null, releasedAt(r)));
       var ul = el('ul');
       notesIn(r, lang).forEach(function (t) { ul.appendChild(el('li', null, t)); });
       body.appendChild(head);

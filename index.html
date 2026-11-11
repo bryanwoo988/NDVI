@@ -32,7 +32,7 @@
   /* nav sits just above the home indicator, not a full inset below it */
   --gap:0px;
   --nb:0px;
-  --navh:64px;
+  --navh:52px;
   --above:calc(var(--navh) + 12px);
 }
 :root[data-theme=dark]{
@@ -153,8 +153,8 @@ svg.i{width:24px;height:24px;stroke:currentColor;stroke-width:1.9;fill:none;
   height:var(--navh);background:var(--navbg);border-top:1px solid var(--line);
   display:flex;align-items:stretch;padding:0 4px}
 #nav button{flex:1 1 0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px;color:var(--mute);min-width:0}
-#nav button b{font-size:11.5px;font-weight:600;letter-spacing:-.01em}
+  align-items:center;justify-content:center;gap:1px;color:var(--mute);min-width:0}
+#nav button b{font-size:10.5px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
 #nav button[aria-current=true]{color:var(--good)}
 #nav button[aria-current=true] b{font-weight:800}
 #nav button[aria-current=true] svg.i{stroke-width:2.3}
@@ -1081,44 +1081,54 @@ const saveCfg = ()=>{
 /* What changed, newest first. Every update adds an entry here; after the
    update the app shows the new entries once (whatsnew.js), and the About
    card shows the version and opens the whole list. */
+/* date: the release day in Malaysia, where the app is used. at: the moment it
+   went live, in UTC; the what's-new sheet shows it in the phone's own time.
+   1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
-  {v:"1.5.1", date:"2026-11-11", notes:{
+  {v:"1.5.2", date:"2026-11-12", at:"2026-11-11T23:27:00Z", notes:{
+    zh:["底部导航栏变薄，地图多一点空间",
+        "更新记录现在显示每一版的日期和时间，并按你手机的时区显示（之前 1.5.1 的日期早了一天）"],
+    en:["A slimmer bottom navigation bar, leaving more room for the map",
+        "The update history now shows the date and time of each version, in your phone\u2019s time zone (1.5.1 was shown a day early)"],
+    ms:["Bar navigasi bawah lebih nipis, memberi lebih ruang untuk peta",
+        "Sejarah kemas kini kini menunjukkan tarikh dan masa setiap versi, mengikut zon waktu telefon anda (1.5.1 dipaparkan sehari lebih awal)"]}},
+  {v:"1.5.1", date:"2026-11-12", at:"2026-11-11T23:06:51Z", notes:{
     zh:["底部导航栏改成贴到屏幕最底的整条样式，下面不再露出一条空白",
         "天气页：右边的按钮不再挡住天气卡片和逐小时预报"],
     en:["The bottom navigation bar now runs edge to edge down to the bottom of the screen, with no blank strip under it",
         "Weather page: the buttons on the right no longer cover the weather card and the hourly forecast"],
     ms:["Bar navigasi bawah kini memenuhi lebar skrin hingga ke bahagian paling bawah, tanpa jalur kosong di bawahnya",
         "Halaman cuaca: butang di sebelah kanan tidak lagi menutup kad cuaca dan ramalan setiap jam"]}},
-  {v:"1.5.0", date:"2026-11-04", notes:{
+  {v:"1.5.0", date:"2026-11-04", at:"2026-11-04T01:54:19Z", notes:{
     zh:["「设置」新增「外观」：可选跟随系统、浅色或深色，浅色和深色各有 4 种主题（经典、纸张、薄荷、薰衣草；午夜、纯黑 OLED、石板、葡萄）",
         "新增「数据怎么看？」：用问答解释长势和水分代表什么、颜色怎么判断、图是哪一天的、最多能看多久以前、空白代表什么。在「设置」和地图的 ⓘ 里都能打开"],
     en:["New Appearance section in Settings: match the system, light or dark, with four themes each (Classic, Paper, Mint, Lavender; Midnight, OLED Black, Slate, Grape)",
         "New “What does the data mean?”: questions and answers on what vegetation and moisture show, how to read the colours, which day an image is from, how far back you can look and what blank areas mean. Open it from Settings or the ⓘ on the map"],
     ms:["Bahagian Rupa baharu di Tetapan: ikut sistem, cerah atau gelap, dengan empat tema setiap satu (Klasik, Kertas, Pudina, Lavender; Tengah Malam, Hitam OLED, Batu Loh, Anggur)",
         "Baharu “Apa maksud data ini?”: soal jawab tentang apa yang ditunjukkan oleh tumbuhan dan lembapan, cara membaca warna, imej dari hari apa, berapa lama ke belakang boleh dilihat dan maksud kawasan kosong. Buka dari Tetapan atau ⓘ pada peta"]}},
-  {v:"1.4.0", date:"2026-11-04", notes:{
+  {v:"1.4.0", date:"2026-11-04", at:"2026-11-04T01:31:10Z", notes:{
     zh:["新增启动画面；打开 App 时如果有新版本，会先显示「发现新版本，正在更新…」，更新好再进 App",
         "新增简单的使用说明：第一次打开会自动出现，以后在「设置」里点「使用说明」随时可以再看"],
     en:["New launch screen; if a new version is available when you open the app, it says so and updates before you start",
         "A short how-to guide: it opens by itself the first time, and any time later from “How to use” in Settings"],
     ms:["Skrin pembuka baharu; jika ada versi baharu semasa aplikasi dibuka, ia memaklumkan dan mengemas kini dahulu",
         "Panduan ringkas cara guna: dibuka sendiri kali pertama, dan bila-bila masa dari “Cara guna” di Tetapan"]}},
-  {v:"1.3.0", date:"2026-11-04", notes:{
+  {v:"1.3.0", date:"2026-11-04", at:"2026-11-04T01:06:44Z", notes:{
     zh:["地图下方的图层按钮会显示这张卫星图的拍摄日期和云量，例如「2026-10-25 · 云量 12%」；点开图层设置可以看到详细说明",
         "云量指的是整个卫星图幅（约 100×100 km）的平均，不是你这块地的"],
     en:["The layer button under the map now shows when the satellite image was taken and its cloud cover, e.g. “2026-10-25 · cloud 12%”; open the layer settings for details",
         "Cloud cover is the average over the whole satellite tile (about 100 × 100 km), not your field"],
     ms:["Butang lapisan di bawah peta kini menunjukkan tarikh imej satelit diambil dan litupan awannya, contohnya “2026-10-25 · awan 12%”; buka tetapan lapisan untuk butiran",
         "Litupan awan ialah purata seluruh jubin satelit (kira-kira 100 × 100 km), bukan kebun anda"]}},
-  {v:"1.2.0", date:"2026-10-13", notes:{
+  {v:"1.2.0", date:"2026-10-13", at:"2026-10-13T02:54:49Z", notes:{
     zh:["「设置」里的版本号旁边会显示这一版的更新日期和时间"],
     en:["Settings shows the date and time of this update next to the version"],
     ms:["Tetapan menunjukkan tarikh dan masa kemas kini ini di sebelah versi"]}},
-  {v:"1.1.0", date:"2026-10-13", notes:{
+  {v:"1.1.0", date:"2026-10-13", at:"2026-10-13T02:20:25Z", notes:{
     zh:["App 更新后会自动弹出「更新了什么」：版本号、日期和改动内容；在「设置」的 App 简介里可以随时查看全部更新记录"],
     en:["After an update the app now shows what changed: the version, the date and what is new; the full list is in the About card in Settings"],
     ms:["Selepas kemas kini, aplikasi kini menunjukkan apa yang berubah: versi, tarikh dan perkara baharu; senarai penuh ada dalam kad Perihal di Tetapan"]}},
-  {v:"1.0.0", date:"2026-10-09", notes:{
+  {v:"1.0.0", date:"2026-10-09", at:"2026-10-09T11:59:45Z", notes:{
     zh:["「定位到我」会等几秒、取最准的 GPS 位置，不再用误差几百米的第一个读数",
         "街道地图改用 Esri，深浅色主题都清楚",
         "画地块更稳：画图按钮不会消失，画好的边界不会丢；坏掉的地块资料不会让 App 打不开",
@@ -1833,7 +1843,7 @@ function renderTop(){
 function renderNav(){
   const ks=["map","fields","trend","wx","set"], icn={map:"map",fields:"fields",trend:"trend",wx:"wx",set:"set"};
   $("nav").innerHTML=ks.map(k=>
-    `<button data-v="${k}" aria-current="${view===k}">${ic(icn[k],23)}<b>${t().nav[k]}</b></button>`).join("");
+    `<button data-v="${k}" aria-current="${view===k}">${ic(icn[k],21)}<b>${t().nav[k]}</b></button>`).join("");
   $("nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{view=b.dataset.v;renderAll();});
 }
 function mapChromeVisible(){
