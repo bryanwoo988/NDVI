@@ -1113,6 +1113,10 @@ const saveCfg = ()=>{
    went live, in UTC; the what's-new sheet shows it in the phone's own time.
    1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
+  {v:"1.6.1", date:"2026-11-12", at:"2026-11-12T00:07:00Z", notes:{
+    zh:["默认地块会排在「地块」列表的最上面"],
+    en:["The default field is now listed first on the Fields page"],
+    ms:["Kebun lalai kini disenaraikan paling atas pada halaman Kebun"]}},
   {v:"1.6.0", date:"2026-11-12", at:"2026-11-11T23:59:00Z", notes:{
     zh:["地块可以改名了：在「地块」页点地块右边的 ⋯",
         "可以设定默认地块：每次打开 App 会先显示它",
@@ -2395,9 +2399,13 @@ function renderPage(){
 const warnSetup=()=>cfg.instanceId?"":`<div class="msg err">${t().needSetup}</div>`;
 const warnField=()=>activeField()?"":`<div class="msg info">${t().needField}</div>`;
 
+/* The default field first, the rest in the order they were drawn. Only the
+   list is reordered: the saved array keeps its order, which the map's
+   layers are indexed by. */
+const listOrder = ()=>{ const d=defaultField(); return d ? [d, ...fields.filter(f=>f!==d)] : fields; };
 function pgFields(){
   return `<h1 class="h1">${t().fieldsTitle}</h1><p class="h1sub">${t().fieldsSub}</p>
-  ${fields.length?fields.map(f=>`
+  ${fields.length?listOrder().map(f=>`
     <div class="frw ${f.id===activeId?"sel":""}">
     <button class="frow" data-f="${f.id}">
       <span class="thumb">${thumbSvg(f.ring,f.id===activeId?"#FF6A3D":cssv("--mute"))}</span>
