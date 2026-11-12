@@ -633,6 +633,8 @@ zh:{
  wxErr:"这个位置没有逐小时预报资料",
  offline:"没有网络连接。等有信号后再试一次。",
  seeMap:"看地图",
+ baseNote:"这个图层只显示卫星底图，没有 Sentinel-2 数据。要看长势、水分或产能分区，请选上面对应的图层。",
+ streetNote:"这个图层只显示街道地图，方便找路和认位置，没有 Sentinel-2 数据。",
  secShow:"显示 / 隐藏 Secret",
  tMissing:"配置里找不到这几个图层名：", tAllMatch:"四个图层名都对得上",
  setT7:"已经设定好了", preNote:"图层、天气、搜索都已经由开发者设好，你不用填任何东西，直接用就行。",
@@ -783,6 +785,8 @@ en:{
  wxErr:"No hourly forecast for this location",
  offline:"No internet connection. Try again when you have signal.",
  seeMap:"See the map",
+ baseNote:"This layer shows only the satellite basemap, with no Sentinel-2 data. For vegetation, moisture or productivity, pick that layer above.",
+ streetNote:"This layer shows only the street map, for finding roads and places, with no Sentinel-2 data.",
  secShow:"Show / hide secret",
  tMissing:"Not present in the configuration: ", tAllMatch:"All four layer names match",
  setT7:"Already set up", preNote:"Layers, weather and search are configured by the developer. Nothing to fill in — just use the app.",
@@ -929,6 +933,8 @@ ms:{
  wxErr:"Tiada ramalan setiap jam untuk lokasi ini",
  offline:"Tiada sambungan internet. Cuba lagi apabila ada isyarat.",
  seeMap:"Lihat peta",
+ baseNote:"Lapisan ini hanya memaparkan peta asas satelit, tanpa data Sentinel-2. Untuk tumbuhan, lembapan atau produktiviti, pilih lapisan itu di atas.",
+ streetNote:"Lapisan ini hanya memaparkan peta jalan, untuk mencari jalan dan tempat, tanpa data Sentinel-2.",
  secShow:"Papar / sembunyi secret",
  rate429:"Dihadkan kadar (terlalu banyak permintaan seminit). Tunggu seminit sebelum cuba lagi.",
  tTiles:"Permintaan jubin sebenar:", tBlank:"imej kosong (tiada imej sesuai untuk tetapan ini)",
@@ -1113,6 +1119,10 @@ const saveCfg = ()=>{
    went live, in UTC; the what's-new sheet shows it in the phone's own time.
    1.5.1 was dated by the build machine's UTC clock and read a day early. */
 const RELEASES = [
+  {v:"1.6.2", date:"2026-11-13", at:"2026-11-12T22:21:00Z", notes:{
+    zh:["选「只看底图」或「街道图」时，图层页下面会说明这个图层没有卫星数据，不再留一片空白"],
+    en:["With \u201cBasemap only\u201d or \u201cStreet map\u201d selected, the layer sheet now explains that the layer has no satellite data, instead of leaving a blank space"],
+    ms:["Apabila \u201cPeta asas sahaja\u201d atau \u201cPeta jalan\u201d dipilih, helaian lapisan kini menerangkan bahawa lapisan itu tiada data satelit, bukan dibiarkan kosong"]}},
   {v:"1.6.1", date:"2026-11-12", at:"2026-11-12T00:07:00Z", notes:{
     zh:["默认地块会排在「地块」列表的最上面"],
     en:["The default field is now listed first on the Fields page"],
@@ -1996,7 +2006,9 @@ function openLayerSheet(){
         <span class="sq" style="background:${TILE_BG[k]}">${ic(TILE_IC[k],30)}</span>
         <span>${t().lyr[k]}</span></button>`).join("")}</div>
     ${anyLocked?`<p class="sub lockmsg">${t().lockNoField}</p>`:""}
-    ${isSat(layerKey)&&activeField()?satControls():""}`);
+    ${isSat(layerKey)&&activeField()?satControls():""}
+    ${isSat(layerKey)?"":`<div class="card" style="margin-top:18px"><p class="sub" style="margin:0">${layerKey==="STREET"?t().streetNote:t().baseNote}</p></div>
+      <button class="btn wide alt" id="sheetDone" style="margin-top:14px">${t().seeMap}</button>`}`);
   bindSheet();
 }
 /* The legend is drawn from the same stops as the scripts in Settings, so the
